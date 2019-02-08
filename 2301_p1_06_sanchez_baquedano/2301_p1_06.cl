@@ -14,6 +14,15 @@
 (defun cosine-distance-rec (x y)
   )
 
+
+(defun scalar_product (x y)
+  if((OR (null x) (null y))
+      0
+      (+
+        (* (first x) (first y))
+        (scalar_product((rest x) (rest y))))))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; cosine-distance-mapcar
 ;;; Calcula la distancia coseno de un vector usando mapcar
@@ -162,7 +171,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lsts
 ;;; Calcula todas las posibles disposiciones de elementos
-;;; pertenecientes a N listas de forma que en cada disposicion 
+;;; pertenecientes a N listas de forma que en cada disposicion
 ;;; aparezca unicamente un elemento de cada lista
 ;;;
 ;;; INPUT: lstolsts: lista de listas
@@ -228,7 +237,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; truth-tree
-;;; Recibe una expresion y construye su arbol de verdad para 
+;;; Recibe una expresion y construye su arbol de verdad para
 ;;; determinar si es SAT o UNSAT
 ;;;
 ;;; INPUT  : fbf - Formula bien formada (FBF) a analizar.
