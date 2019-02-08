@@ -11,17 +11,22 @@
 ;;;         y: vector, representado como una lista
 ;;; OUTPUT: distancia coseno entre x e y
 ;;;
-(defun cosine-distance-rec (x y)
-  )
-
-
-(defun scalar_product (x y)
-  if((OR (null x) (null y))
+(defun scalar-product-rec (x y)
+  (IF (OR (NULL x) (NULL y))
       0
       (+
-        (* (first x) (first y))
-        (scalar_product((rest x) (rest y))))))
+        (* (CAR x) (CAR y))
+        (scalar-product-rec (CDR x) (CDR y)))))
 
+(defun norm-rec (x)
+  (sqrt (scalar-product-rec x x)))
+
+(defun cosine-distance-rec (x y)
+  (-
+    1
+    (/
+      (scalar-product-rec x y)
+      (* (norm-rec x) (norm-rec y)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; cosine-distance-mapcar
@@ -32,8 +37,20 @@
 ;;;         y: vector, representado como una lista
 ;;; OUTPUT: distancia coseno entre x e y
 ;;;
+
+(defun scalar-product-mapcar (x y)
+  (apply #'+
+    (mapcar #'* x y)))
+
+(defun norm-mapcar (x)
+  (sqrt (scalar-product-mapcar x x)))
+
 (defun cosine-distance-mapcar (x y)
-  )
+  (-
+    1
+    (/
+      (scalar-product-mapcar x y))
+      (* (norm-mapcar x) (norm-mapcar y)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; order-vectors-cosine-distance
