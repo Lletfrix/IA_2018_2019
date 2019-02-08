@@ -22,11 +22,13 @@
   (sqrt (scalar-product-rec x x)))
 
 (defun cosine-distance-rec (x y)
-  (-
-    1
-    (/
-      (scalar-product-rec x y)
-      (* (norm-rec x) (norm-rec y)))))
+  (IF (OR (= 0 (norm-rec x)) (= 0 (norm-rec y)))
+      nil
+      (-
+        1
+        (/
+          (scalar-product-rec x y)
+          (* (norm-rec x) (norm-rec y))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; cosine-distance-mapcar
@@ -46,11 +48,13 @@
   (sqrt (scalar-product-mapcar x x)))
 
 (defun cosine-distance-mapcar (x y)
-  (-
-    1
-    (/
-      (scalar-product-mapcar x y))
-      (* (norm-mapcar x) (norm-mapcar y)))))
+  (IF (OR (= 0 (norm-mapcar x)) (= 0 (norm-mapcar y)))
+      nil
+      (-
+        1
+        (/
+          (scalar-product-mapcar x y)
+          (* (norm-mapcar x) (norm-mapcar y))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; order-vectors-cosine-distance
