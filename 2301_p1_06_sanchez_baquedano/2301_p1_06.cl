@@ -18,8 +18,8 @@
         (* (CAR x) (CAR y))
         (scalar-product-rec (CDR x) (CDR y)))))
 
-(defun norm-rec (x)
-  (sqrt (scalar-product-rec x x)))
+(defun squared-norm-rec (x)
+  (scalar-product-rec x x))
 
 (defun cosine-distance-rec (x y)
   (IF (OR (= 0 (norm-rec x)) (= 0 (norm-rec y)))
@@ -28,7 +28,8 @@
         1
         (/
           (scalar-product-rec x y)
-          (* (norm-rec x) (norm-rec y))))))
+          (sqrt
+            (* (squared-norm-rec x) (squared-norm-rec y)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; cosine-distance-mapcar
@@ -44,17 +45,18 @@
   (apply #'+
     (mapcar #'* x y)))
 
-(defun norm-mapcar (x)
-  (sqrt (scalar-product-mapcar x x)))
+(defun squared-norm-mapcar (x)
+  (scalar-product-mapcar x x))
 
 (defun cosine-distance-mapcar (x y)
   (IF (OR (= 0 (norm-mapcar x)) (= 0 (norm-mapcar y)))
-      nil
+      NIL
       (-
         1
         (/
           (scalar-product-mapcar x y)
-          (* (norm-mapcar x) (norm-mapcar y))))))
+          (sqrt
+            (* (squared-norm-mapcar x) (squared-norm-mapcar y)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; order-vectors-cosine-distance
@@ -67,9 +69,26 @@
 ;;;         categoria es superior al nivel de confianza ,
 ;;;         ordenados
 ;;;
-(defun order-vectors-cosine-distance (vector lst-of-vectors &optional (confidence-level 0))
-  )
 
+(defun likelihood (x y)
+  (- 1 (cosine-distance-mapcar x y)))
+
+(defun less-likelihood (x y vector)
+  (< (likelihood x vector) (likelihood y vector)))
+
+(defun insert-in-descending-order (vector element lst less-function)
+  (IF (NULL lst)
+      (CONS element lst)
+      (IF (funcall less-function element (CAR lst) vector)
+          (CONS (CAR lst) (insert-in-descending-order vector element (CDR lst) less-function))
+          (CONS element lst))))
+
+(defun order-vectors-cosine-distance (vector lst-of-vectors &optional (confidence-level 0))
+  (IF (OR (NULL lst-of-vectors) (NULL vector))
+      NIL
+      (IF ( > (likelihood vector (CAR lst-of-vectors)) confidence-level)
+          (insert-in-descending-order vector (CAR lst-of-vectors) (order-vectors-cosine-distance vector (CDR lst-of-vectors) confidence-level) 'less-likelihood)
+          (order-vectors-cosine-distance vector (CDR lst-of-vectors) confidence-level))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; get-vectors-category (categories vectors distance-measure)
