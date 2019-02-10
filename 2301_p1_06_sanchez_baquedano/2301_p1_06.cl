@@ -144,14 +144,11 @@
     (funcall df current-point))))
 
 (defun newton (f df max-iter x0 &optional (tol 0.001)) ;; TODO: Comprobar derivada nula
-  (let ((h (h-value x0 f df))) ; TODO: Preguntar si usar let
-    (IF (< (ABS h) tol) ; TODO: Preguntar si esta es la tolerancia
-        x0
-        (IF(= max-iter 0) ;TODO: Preguntar si usar UNLESS
-            NIL
+  (UNLESS (OR (= (funcall df x0) 0) (= max-iter 0))
+      (let ((h (h-value x0 f df))) ; TODO: Preguntar si usar let
+        (IF (< (ABS h) tol) ; TODO: Preguntar si esta es la tolerancia
+            x0
             (newton f df (- max-iter 1) (- x0 h) tol)))))
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; one-root-newton
