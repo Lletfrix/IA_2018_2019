@@ -22,7 +22,7 @@
   (scalar-product-rec x x))
 
 (defun cosine-distance-rec (x y)
-  (IF (OR (= 0 (norm-rec x)) (= 0 (norm-rec y)))
+  (IF (OR (= 0 (squared-norm-rec x)) (= 0 (squared-norm-rec y)))
       nil
       (-
         1
@@ -49,7 +49,7 @@
   (scalar-product-mapcar x x))
 
 (defun cosine-distance-mapcar (x y)
-  (IF (OR (= 0 (norm-mapcar x)) (= 0 (norm-mapcar y)))
+  (IF (OR (= 0 (squared-norm-mapcar x)) (= 0 (squared-norm-mapcar y)))
       NIL
       (-
         1
@@ -69,6 +69,9 @@
 ;;;         categoria es superior al nivel de confianza ,
 ;;;         ordenados
 ;;;
+;;;
+
+;; '(2 3 4) '((1 2 3) (1 2 0)) 0.3
 
 (defun likelihood (x y)
   (- 1 (cosine-distance-mapcar x y)))
@@ -78,16 +81,16 @@
 
 (defun insert-in-descending-order (vector element lst less-function)
   (IF (NULL lst)
-      (CONS element lst)
+      (CONS element lst) ; TODO: Considerar (CONS element nil)
       (IF (funcall less-function element (CAR lst) vector)
-          (CONS (CAR lst) (insert-in-descending-order vector element (CDR lst) less-function))
+          (CONS (CAR lst) (insert-in-descending-order vector element (CDR lst) less-function)) ; TODO: Explicar un poco
           (CONS element lst))))
 
-(defun order-vectors-cosine-distance (vector lst-of-vectors &optional (confidence-level 0))
+(defun order-vectors-cosine-distance (vector lst-of-vectors &optional (confidence-level 0)) ; TODO: Considerar UNLESS para parametros de entrada
   (IF (OR (NULL lst-of-vectors) (NULL vector))
       NIL
       (IF ( > (likelihood vector (CAR lst-of-vectors)) confidence-level)
-          (insert-in-descending-order vector (CAR lst-of-vectors) (order-vectors-cosine-distance vector (CDR lst-of-vectors) confidence-level) 'less-likelihood)
+          (insert-in-descending-order vector (CAR lst-of-vectors) (order-vectors-cosine-distance vector (CDR lst-of-vectors) confidence-level) 'less-likelihood) ; TODO: Explicar
           (order-vectors-cosine-distance vector (CDR lst-of-vectors) confidence-level))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -102,10 +105,22 @@
 ;;; OUTPUT: Pares formados por el vector que identifica la categoria
 ;;;         de menor distancia , junto con el valor de dicha distancia
 ;;;
-( defun get-vectors-category (categories texts distance-measure)
-  )
+(defun get-min-category (categories text distance-measure)
+  (IF (NULL categories)
+      '(NIL 3)
+      (let ((current-distance (funcall distance-measure (CDR text) (CDR (CAR categories))))
+            (last-pair (get-min-category (CDR categories) text distance-measure)))
+        (IF (< current-distance (NTH 1 last-pair))
+            (CONS (CAR (CAR categories)) (LIST current-distance))
+            last-pair))))
 
-
+(defun get-vectors-category (categories texts distance-measure)
+  (UNLESS (OR (NULL (CAR categories)) (NULL (CAR texts))) ; TODO: preguntar si es necesario considerarlo '() '()
+      (IF (OR (NULL texts)) ; Condicion de recursion // TODO: Preguntar si es necesario.
+          NIL
+          (CONS
+            (get-min-category categories (CAR texts) distance-measure)
+            (get-vectors-category categories (CDR texts) distance-measure)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 2
@@ -122,8 +137,21 @@
 ;;;         tol: tolerancia para convergencia (parametro opcional)
 ;;; OUTPUT: estimacion del cero de f o NIL si no converge
 ;;;
-( defun newton (f df max-iter x0 &optional (tol 0.001))
-  )
+
+(defun h-value (current-point f df)
+  (/
+    (funcall f current-point)
+    (funcall df current-point))))
+
+(defun newton (f df max-iter x0 &optional (tol 0.001)) ;; TODO: Comprobar derivada nula
+  (let ((h (h-value x0 f df))) ; TODO: Preguntar si usar let
+    (IF (< (ABS h) tol) ; TODO: Preguntar si esta es la tolerancia
+        x0
+        (IF(= max-iter 0) ;TODO: Preguntar si usar UNLESS
+            NIL
+            (newton f df (- max-iter 1) (- x0 h) tol)))))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; one-root-newton
@@ -140,7 +168,8 @@
 ;;;          para todas las semillas
 ;;;
 (defun one-root-newton (f df max-iter semillas &optional (tol 0.001))
-  )
+)
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -157,8 +186,8 @@
 ;;; OUTPUT: el primer cero de f que se encuentre, o NIL si se diverge
 ;;;         para todas las semillas
 ;;;
-(defun one-root-newton (f df max-iter semillas &optional ( tol 0.001))
-  )
+(defun one-root-newton (f df max-iter semillas &optional ( tol 0.001)))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -175,8 +204,8 @@
 ;;; OUTPUT: las raices que se encuentren para cada semilla o nil
 ;;;          si para esa semilla el metodo no converge
 ;;;
-(defun all-roots-newton (f df tol-abs max-iter semillas &optional ( tol 0.001))
-  )
+(defun all-roots-newton (f df tol-abs max-iter semillas &optional ( tol 0.001)))
+
 
 
 
@@ -193,8 +222,8 @@
 ;;;
 ;;; OUTPUT: lista con las combinacion del elemento con cada uno de los
 ;;;         de la lista
-(defun combine-elt-lst (elt lst)
-  )
+(defun combine-elt-lst (elt lst))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-lst-lst
@@ -204,8 +233,8 @@
 ;;;        lst2: segunda lista
 ;;;
 ;;; OUTPUT: producto cartesiano de las dos listas
-(defun combine-lst-lst (lst1 lst2)
-  )
+(defun combine-lst-lst (lst1 lst2))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -217,8 +246,8 @@
 ;;; INPUT: lstolsts: lista de listas
 ;;;
 ;;; OUTPUT: lista con todas las posibles combinaciones de elementos
-(defun combine-list-of-lsts (lstolsts)
-  )
+(defun combine-list-of-lsts (lstolsts))
+
 
 
 
@@ -284,8 +313,8 @@
 ;;; OUTPUT : T   - FBF es SAT
 ;;;          N   - FBF es UNSAT
 ;;;
-(defun truth-tree (fbf)
-  )
+(defun truth-tree (fbf))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -302,8 +331,7 @@
 ;;; OUTPUT: camino mas corto entre dos nodos
 ;;;         nil si no lo encuentra
 
-(defun bfs-improved (end queue net)
-  )
+(defun bfs-improved (end queue net))
 
-(defun shortest-path-improved (end queue net)
-  )
+
+(defun shortest-path-improved (end queue net))
