@@ -145,7 +145,7 @@
 
 (defun newton (f df max-iter x0 &optional (tol 0.001)) ;; TODO: Comprobar derivada nula
   (UNLESS (OR (= (funcall df x0) 0) (= max-iter 0))
-      (let ((h (h-value x0 f df))) ; TODO: Preguntar si usar let
+       (let ((h (h-value x0 f df))) ; TODO: Preguntar si usar let
         (IF (< (ABS h) tol) ; TODO: Preguntar si esta es la tolerancia
             x0
             (newton f df (- max-iter 1) (- x0 h) tol)))))
@@ -165,26 +165,11 @@
 ;;;          para todas las semillas
 ;;;
 (defun one-root-newton (f df max-iter semillas &optional (tol 0.001))
-)
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; one-root-newton
-;;; Prueba con distintas semillas iniciales hasta que Newton
-;;; converge
-;;;
-;;; INPUT: f: funcion de la que se desea encontrar un cero
-;;;        df: derivada de f
-;;;        max-iter: maximo numero de iteraciones
-;;;        semillas : semillas con las que invocar a Newton
-;;;        tol : tolerancia para convergencia ( parametro opcional )
-;;;
-;;; OUTPUT: el primer cero de f que se encuentre, o NIL si se diverge
-;;;         para todas las semillas
-;;;
-(defun one-root-newton (f df max-iter semillas &optional ( tol 0.001)))
-
+  (UNLESS (NULL semillas)
+      (let ((solution (newton f df max-iter (CAR semillas) tol)))
+        (IF (NULL solution)
+            (one-root-newton f df max-iter (CDR semillas) tol)
+            solution))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -201,10 +186,12 @@
 ;;; OUTPUT: las raices que se encuentren para cada semilla o nil
 ;;;          si para esa semilla el metodo no converge
 ;;;
-(defun all-roots-newton (f df tol-abs max-iter semillas &optional ( tol 0.001)))
+(defun all-roots-newton (f df max-iter semillas &optional ( tol 0.001))
+  (mapcar #'(lambda(seed) (newton f df max-iter seed tol)) semillas))
 
 
-
+(defun list-not-nil-roots-newton (f df max-iter semillas &optional ( tol 0.001))
+  (mapcan (lambda (x) (UNLESS (NULL x) (list x))) (all-roots-newton f df max-iter semillas tol)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 3
