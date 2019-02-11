@@ -206,8 +206,10 @@
 ;;;
 ;;; OUTPUT: lista con las combinacion del elemento con cada uno de los
 ;;;         de la lista
-(defun combine-elt-lst (elt lst))
-
+(defun combine-elt-lst (elt lst)
+  (IF (NULL lst)
+      (list elt)
+      (mapcar #'(lambda(x) (cons elt (list x))) lst))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-lst-lst
@@ -217,9 +219,14 @@
 ;;;        lst2: segunda lista
 ;;;
 ;;; OUTPUT: producto cartesiano de las dos listas
-(defun combine-lst-lst (lst1 lst2))
+(defun merge-two-lst (lst1 lst2)
+  (IF (NULL lst1)
+      lst2
+      (CONS (CAR lst1) (merge-two-lst (CDR lst1) lst2))))
 
-
+(defun combine-lst-lst (lst1 lst2) ; TODO: Mirar algunos casos raros
+  (UNLESS (NULL lst1)
+      (merge-two-lst (combine-elt-lst (CAR lst1) lst2) (combine-lst-lst (CDR lst1) lst2))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lsts
