@@ -22,8 +22,7 @@
   (scalar-product-rec x x))
 
 (defun cosine-distance-rec (x y)
-  (IF (OR (= 0 (squared-norm-rec x)) (= 0 (squared-norm-rec y)))
-      nil
+  (UNLESS (OR (= 0 (squared-norm-rec x)) (= 0 (squared-norm-rec y)))
       (-
         1
         (/
@@ -49,8 +48,7 @@
   (scalar-product-mapcar x x))
 
 (defun cosine-distance-mapcar (x y)
-  (IF (OR (= 0 (squared-norm-mapcar x)) (= 0 (squared-norm-mapcar y)))
-      NIL
+  (UNLESS (OR (= 0 (squared-norm-mapcar x)) (= 0 (squared-norm-mapcar y)))
       (-
         1
         (/
@@ -87,8 +85,7 @@
           (CONS element lst))))
 
 (defun order-vectors-cosine-distance (vector lst-of-vectors &optional (confidence-level 0)) ; TODO: Considerar UNLESS para parametros de entrada
-  (IF (OR (NULL lst-of-vectors) (NULL vector))
-      NIL
+  (UNLESS (OR (NULL lst-of-vectors) (NULL vector))
       (IF ( > (likelihood vector (CAR lst-of-vectors)) confidence-level)
           (insert-in-descending-order vector (CAR lst-of-vectors) (order-vectors-cosine-distance vector (CDR lst-of-vectors) confidence-level) 'less-likelihood) ; TODO: Explicar
           (order-vectors-cosine-distance vector (CDR lst-of-vectors) confidence-level))))
@@ -116,8 +113,7 @@
 
 (defun get-vectors-category (categories texts distance-measure)
   (UNLESS (OR (NULL (CAR categories)) (NULL (CAR texts))) ; TODO: preguntar si es necesario considerarlo '() '()
-      (IF (OR (NULL texts)) ; Condicion de recursion // TODO: Preguntar si es necesario.
-          NIL
+      (UNLESS (OR (NULL texts)) ; Condicion de recursion // TODO: Preguntar si es necesario
           (CONS
             (get-min-category categories (CAR texts) distance-measure)
             (get-vectors-category categories (CDR texts) distance-measure)))))
@@ -126,6 +122,20 @@
 ;; EJERCICIO 2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; h-value
+;;; Calcula el incremento en el eje X para la siguiente iteración del
+;;; método de Newton.
+;;; INPUT:  current-point: punto actual del eje X.
+;;;         f: funcion cuyo cero se desea encontrar
+;;;         df: derivada de f
+;;;
+;;; OUTPUT: incremento para la siguente iteración
+(defun h-value (current-point f df)
+  (/
+    (funcall f current-point)
+    (funcall df current-point))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; newton
 ;;; Estima el cero de una funcion mediante Newton-Raphson
@@ -137,12 +147,6 @@
 ;;;         tol: tolerancia para convergencia (parametro opcional)
 ;;; OUTPUT: estimacion del cero de f o NIL si no converge
 ;;;
-
-(defun h-value (current-point f df)
-  (/
-    (funcall f current-point)
-    (funcall df current-point))))
-
 (defun newton (f df max-iter x0 &optional (tol 0.001)) ;; TODO: Comprobar derivada nula
   (UNLESS (OR (= (funcall df x0) 0) (= max-iter 0))
        (let ((h (h-value x0 f df))) ; TODO: Preguntar si usar let
@@ -197,6 +201,20 @@
 ;; EJERCICIO 3
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; to-list
+;;; Si x no es una lista, devuelve la lista que contiene a x.
+;;;
+;;; INPUT: x: objeto a enlistar
+;;;
+;;; OUTPUT: Si x no es una lista, la lista que contiene a x.
+;;;         Si x es una lista, delvuelve la propia x.
+(defun to-list (x)
+  (IF (listp x)
+    x
+    (list x)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-elt-lst
 ;;; Combina un elemento dado con todos los elementos de una lista
@@ -206,11 +224,6 @@
 ;;;
 ;;; OUTPUT: lista con las combinacion del elemento con cada uno de los
 ;;;         de la lista
-(defun to-list (x)
-  (IF (listp x)
-    x
-    (list x)))
-    
 (defun combine-elt-lst (elt lst)
     (UNLESS (NULL elt)
       (IF (equal lst '(NIL))
@@ -238,14 +251,10 @@
 ;;; INPUT: lstolsts: lista de listas
 ;;;
 ;;; OUTPUT: lista con todas las posibles combinaciones de elementos
-(defun combine-list-of-lsts (lstolsts)
-  (IF (NULL lstolsts)
-      '(NIL)
-      (combine-lst-lst (CAR lstolsts) (combine-list-of-lsts (CDR lstolsts)))))
 
 (defun combine-list-of-lsts (lstolsts)
   (IF (NULL lstolsts)
-      '(NIL)
+      '(NIL) ; Elemento neutro del producto cartesiano
       (mapcan #'(lambda(x) (combine-elt-lst x (combine-list-of-lsts (CDR lstolsts)) ) ) (CAR lstolsts))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
