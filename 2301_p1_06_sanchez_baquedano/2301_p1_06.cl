@@ -206,10 +206,16 @@
 ;;;
 ;;; OUTPUT: lista con las combinacion del elemento con cada uno de los
 ;;;         de la lista
+(defun to-list (x)
+  (IF (listp x)
+    x
+    (list x)))
+    
 (defun combine-elt-lst (elt lst)
-  (IF (NULL lst)
-      (list elt)
-      (mapcar #'(lambda(x) (cons elt (list x))) lst))
+    (UNLESS (NULL elt)
+      (IF (equal lst '(NIL))
+          (list elt)
+          (mapcar #'(lambda(x) (cons elt (to-list x) )  ) lst)   )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-lst-lst
@@ -219,14 +225,9 @@
 ;;;        lst2: segunda lista
 ;;;
 ;;; OUTPUT: producto cartesiano de las dos listas
-(defun merge-two-lst (lst1 lst2)
-  (IF (NULL lst1)
-      lst2
-      (CONS (CAR lst1) (merge-two-lst (CDR lst1) lst2))))
 
 (defun combine-lst-lst (lst1 lst2) ; TODO: Mirar algunos casos raros
-  (UNLESS (NULL lst1)
-      (merge-two-lst (combine-elt-lst (CAR lst1) lst2) (combine-lst-lst (CDR lst1) lst2))))
+    (mapcan #'(lambda(x) (combine-elt-lst x lst2)) lst1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lsts
@@ -237,10 +238,15 @@
 ;;; INPUT: lstolsts: lista de listas
 ;;;
 ;;; OUTPUT: lista con todas las posibles combinaciones de elementos
-(defun combine-list-of-lsts (lstolsts))
+(defun combine-list-of-lsts (lstolsts)
+  (IF (NULL lstolsts)
+      '(NIL)
+      (combine-lst-lst (CAR lstolsts) (combine-list-of-lsts (CDR lstolsts)))))
 
-
-
+(defun combine-list-of-lsts (lstolsts)
+  (IF (NULL lstolsts)
+      '(NIL)
+      (mapcan #'(lambda(x) (combine-elt-lst x (combine-list-of-lsts (CDR lstolsts)) ) ) (CAR lstolsts))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4
