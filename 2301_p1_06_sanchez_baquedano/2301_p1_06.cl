@@ -240,7 +240,9 @@
 ;;; OUTPUT: producto cartesiano de las dos listas
 
 (defun combine-lst-lst (lst1 lst2) ; TODO: Mirar algunos casos raros
-    (mapcan #'(lambda(x) (combine-elt-lst x lst2)) lst1))
+  (IF (EQUAL lst1 '(NIL))
+      lst2
+      (mapcan #'(lambda(x) (combine-elt-lst x lst2)) lst1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lsts
