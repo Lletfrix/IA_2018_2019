@@ -253,7 +253,7 @@
 ;;; OUTPUT: lista con todas las posibles combinaciones de elementos
 
 (defun combine-list-of-lsts (lstolsts)
-  (IF (NULL lstolsts)
+  (IF (OR (NULL lstolsts) (EQUAL '((NIL)) lstolsts))
       '(NIL) ; Elemento neutro del producto cartesiano
       (mapcan #'(lambda(x) (combine-elt-lst x (combine-list-of-lsts (CDR lstolsts)) ) ) (CAR lstolsts))))
 
