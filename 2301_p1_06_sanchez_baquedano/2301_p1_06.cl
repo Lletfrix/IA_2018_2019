@@ -311,6 +311,41 @@
   (or (positive-literal-p x)
       (negative-literal-p x)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; FUNCIONES DE DERIVACION
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun double-neg (x)
+  (CDR (CAR (CDR x))))
+
+(defun neg-conj (x)
+  (let ( (literals (CDR (CAR (CDR x)) ) ) )
+    (list +or+ (list +not+ (CAR literals)) (cons +not+ (CDR literals)))))
+
+(defun neg-disj (x)
+  (let ( (literals (CDR (CAR (CDR x)) ) ) )
+  (list +and+ (list +not+ (CAR literals)) (cons +not+ (CDR literals)))))
+
+(defun implies (x)
+  (let ((literals (CDR x) ))
+  (list +or+ (list +not+ (CAR literals)) (CAR (CDR literals)))))
+
+(defun neg-implies (x)
+  (let ((literals (CDR (CAR (CDR x) ))))
+  (list +and+ (CAR literals) (cons +not+ (CDR literals)))))
+
+;(defun neg-implies (x)
+  ;(neg-disj  (list +not+ (implies (CAR (CDR x) )))))
+
+(defun bicond (x)
+  (let ((literals (CDR x) ))
+  (list +and+ (implies (cons +cond+ literals) ) (implies (cons +cond+ (reverse literals) ) ))))
+
+(defun neg-bicond (x)
+  (let ((literals (CDR (CAR (CDR x) ))))
+  (list +or+ (neg-implies (list +not+ (cons +cond+ literals)) ) (neg-implies (list +not+ (cons +cond+ (reverse literals) ) )))))
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; truth-tree
@@ -323,7 +358,37 @@
 ;;;
 (defun truth-tree (fbf))
 
+(defun expand-truth-tree-aux (fbf)
+  (cond
+    ((literal-p fbf)
+        (list fbf))
 
+    ((unary-connector-p (CAR fbf))
+        (cond
+          ((unary-connector-p (CAR (CAR (CDR fbf))))
+              (expand-truth-tree-aux (double-neg fbf)))
+
+          ((cond-connector-p (CAR (CAR (CDR fbf))))
+              (expand-truth-tree-aux (neg-implies fbf)))
+
+          ((bicond-connector-p (CAR (CAR (CDR fbf))))
+              (expand-truth-tree-aux (neg-bicond fbf)))
+
+          ((n-ary-connector-p (CAR (CAR (CDR fbf))))
+              (if (eql (CAR (CAR (CDR fbf))) +or+)
+                  (expand-truth-tree-aux (neg-disj fbf))
+                  (expand-truth tree-aux (neg-conj fbf))))))
+
+    ((cond-connector-p (CAR fbf))
+        (expand-truth-tree-aux (implies fbf)))
+
+    ((bicond-connector-p (CAR fbf))
+        (expand-truth-tree-aux (bicond fbf)))
+
+    ((n-ary-connector-p (CAR fbf))
+        (if (eql (CAR (CAR (CDR fbf))) +or+)
+            (nconc (expand-truth-tree-aux (CAR (CDR fbf))) (expand-truth-tree-aux (CAR (CDR (CDR fbf)))))
+            (combine-lst-lst (expand-truth-tree-aux (CAR (CDR fbf) )) (expand-truth-tree-aux (CAR (CDR (CDR fbf)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 5
