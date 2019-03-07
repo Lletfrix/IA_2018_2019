@@ -166,11 +166,18 @@
 ;;; OUTPUT : T   - FBF es SAT
 ;;;          N   - FBF es UNSAT
 ;;;
-(defun truth-tree (fbf))
+(defun truth-tree (fbf)
+  (UNLESS (NULL fbf)
+  (some #'branch-is-sat (expand-truth-tree fbf))))
+
+(defun expand-truth-tree(fbf)
+    ;(IF (EQUAL (CAR fbf) +and+)
+      (list (expand-truth-tree-aux fbf)))
+      ;(expand-truth-tree-aux fbf)))
 
 (defun expand-truth-tree-aux (fbf)
   (cond
-    (OR (literal-p fbf)
+    ((literal-p fbf)
         (list fbf))
     ((unary-connector-p (CAR fbf))
         (cond
@@ -195,10 +202,26 @@
         (expand-truth-tree-aux (bicond fbf)))
 
     ((n-ary-connector-p (CAR fbf))
-        (if (eql (CAR fbf) +or+)
+        (if (eql (CAR fbf) +and+)
             (UNLESS (NULL (CDR fbf))
-                (nconc (expand-truth-tree-aux (CAR (CDR fbf))) (expand-truth-tree-aux (cons +or+ (CDDR fbf)))))
+                (nconc (expand-truth-tree-aux (CAR (CDR fbf))) (expand-truth-tree-aux (cons +and+ (CDDR fbf)))))
 
-            (IF (NULL (CDDR fbf)) ; Si es un AND (^ A)
-              (expand-truth-tree-aux (CAR (CDR fbf))) ;(A)
-              (mapcan (lambda (x) (list (expand-truth-tree-aux x))) (combine-list-of-lsts  (list (list +and+) (CDR fbf)))))))))
+            (IF (NULL (CDDR fbf))
+              (expand-truth-tree-aux (CAR (CDR fbf)))
+              (mapcan (lambda (x) (list (expand-truth-tree-aux x))) (combine-list-of-lsts  (list (list +or+) (CDR fbf)))))))))
+
+(defun branch-is-sat (fbf)
+    (evaluate nil fbf))
+
+(defun evaluate (auxlist fbf)
+  (IF (NULL fbf)
+      T
+      (IF (LISTP (CAR fbf))
+          (UNLESS (FIND (CAR (CDR (CAR fbf))) (CAR auxlist) :test #'EQUAL)
+              (IF (FIND (CAR (CDR (CAR fbf))) (CAR (CDR auxlist)) :test #'EQUAL)
+                  (evaluate auxlist (CDR fbf))
+                  (evaluate (CONS (CAR auxlist) (LIST (NCONC (LIST (CAR (CDR (CAR fbf)))) (CAR (CDR auxlist)))))  (CDR fbf))))
+          (UNLESS (FIND (CAR fbf) (CAR (CDR auxlist)) :test #'EQUAL)
+              (IF (FIND (CAR fbf) (CAR auxlist) :test #'EQUAL)
+                  (evaluate auxlist (CDR fbf))
+                  (evaluate (LIST (NCONC (CAR auxlist) (LIST (CAR fbf))) (CAR (CDR auxlist))) (CDR fbf)))))))
