@@ -475,29 +475,59 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 5.2
-BFS(grafo G, nodo_inical s)
-  para cada nodo u de G(
-                        estado[u]=NO_VISITADO
-                        distancia[u]= INFINITO
-                        padre[u]=null)
+BFS(grafo G, nodo_inical s){
+  para cada nodo u de G{
+    estado[u]=NO_VISITADO
+    distancia[u]= INFINITO
+    padre[u]=null
+  }
   estado[s]=VISITADO
   distancia[s]=0
   crear_cola(Q);
   Encolar(Q, s)
-  while(!vacia(Q)){}
+  while(!vacia(Q)){
     u = extraer(Q)
-    para cada v de adyacencia[u]{}
-
-
-
-
-
-
+    para cada v de adyacencia[u]{
+      if(estado[v]==NO_VISITADO){
+        estado[v]= VISITADO
+        distancia[v] = distancia[u]+1
+        padre[v]=u
+        Encolar(Q,v)
+      }
+    }
+  }
+}
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 5.4
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;; Breadth-first-search in graphs
+ ;;;
+ (defun bfs (end queue net)
+    (if (null queue) ;; Si la cola esta vacia devuelve una lista vacia
+        '()
+    ;; Inicializa path como el primer elemento de queue y node como el primero
+    ;; de path
+    (let* ((path (first queue))
+            (node (first path)))
+      ;; Si node es igual a el nodo buscado devolvemos el camino inverso de path
+      (if (eql node end)
+          (reverse path)
+          ;; Si no, llama recursivamente a BFS
+          (bfs end
+            (append (rest queue)
+                    (new-paths path node net))
+            net )))))
 
-
+ (defun new-paths (path node net)
+    (mapcar #'(lambda (n)
+                (cons n path))
+            (rest (assoc node net))))
+ ;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; shortest-path-improved
