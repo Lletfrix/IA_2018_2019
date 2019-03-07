@@ -529,6 +529,14 @@ BFS(grafo G, nodo_inical s){
  ;;;
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 5.7
+(shortest-path 'b 'g '((a b c d e) (b a d e f) (c a g) (d a b e g h)
+                  (e a b d g h) (f b h) (g c d e h) (h d e f g)))
+
+Seguramente la salida sea stack overflow.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; shortest-path-improved
 ;;; Version de busqueda en anchura que no entra en recursion
