@@ -475,29 +475,100 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 5.2
-BFS(grafo G, nodo_inical s)
-  para cada nodo u de G(
-                        estado[u]=NO_VISITADO
-                        distancia[u]= INFINITO
-                        padre[u]=null)
+BFS(grafo G, nodo_inical s){
+  para cada nodo u de G{
+    estado[u]=NO_VISITADO
+    distancia[u]= INFINITO
+    padre[u]=null
+  }
   estado[s]=VISITADO
   distancia[s]=0
   crear_cola(Q);
   Encolar(Q, s)
-  while(!vacia(Q)){}
+  while(!vacia(Q)){
     u = extraer(Q)
-    para cada v de adyacencia[u]{}
-
-
-
-
-
-
+    para cada v de adyacencia[u]{
+      if(estado[v]==NO_VISITADO){
+        estado[v]= VISITADO
+        distancia[v] = distancia[u]+1
+        padre[v]=u
+        Encolar(Q,v)
+      }
+    }
+  }
+}
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 5.4
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;; Breadth-first-search in graphs
+ ;;;
+ ;;; INPUT:   end: nodo final
+ ;;;          queue: cola de nodos por explorar
+ ;;;          net: grafo
+ ;;; OUTPUT: arbol de busqueda en anchura
+ ;;;         nil si no lo encuentra
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ (defun bfs (end queue net)
+    (if (null queue) ;; Si la cola esta vacia devuelve una lista vacia
+        '()
+    ;; Inicializa path como el primer elemento de queue y node como el primero
+    ;; de path
+    (let* ((path (first queue))
+            (node (first path)))
+      ;; Si node es igual a el nodo buscado devolvemos el camino inverso de path
+      (if (eql node end)
+          (reverse path)
+          ;; Si no, llama recursivamente a BFS
+          (bfs end
+            (append (rest queue)
+                    (new-paths path node net))
+            net )))))
 
+ (defun new-paths (path node net)
+    (mapcar #'(lambda (n)
+                (cons n path))
+            (rest (assoc node net))))
+ ;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 5.7
+(shortest-path 'b 'g '((a b c d e) (b a d e f) (c a g) (d a b e g h)
+                  (e a b d g h) (f b h) (g c d e h) (h d e f g)))
+
+Seguramente la salida sea stack overflow.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;5.8
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; bfs-improved
+;;; busqueda en anchura mejorada sin recursion infinita
+;;; INPUT:   end: nodo final
+;;;          queue: cola de nodos por explorar
+;;;          net: grafo
+;;;          expanded-nodes: nodos ya expandidos o vistados
+;;; OUTPUT: arbol de busqueda en anchura
+;;;         nil si no lo encuentra
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun bfs-improved (end queue net expanded-nodes)
+   (if (NULL queue) ;; Si la cola esta vacia devuelve una lista vacia
+       '()
+   ;; Inicializa path como el primer elemento de queue y node como el primero
+   ;; de path
+   (let* ((path (first queue))
+           (node (first path)))
+     ;; Si node es igual a el nodo buscado devolvemos el camino inverso de path
+     (if (EQL node end)
+         (reverse path)
+         if(find node expanded-nodes)
+            (bfs-improved end (CDR queue) net expanded-nodes)
+            (bfs-improved ebd (APPEND (CDR queue) (new-paths path
+                        (CONS node expanded-nodes) net)) net expanded-nodes)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; shortest-path-improved
@@ -508,7 +579,5 @@ BFS(grafo G, nodo_inical s)
 ;;;          net: grafo
 ;;; OUTPUT: camino mas corto entre dos nodos
 ;;;         nil si no lo encuentra
-(defun bfs-improved (end queue net))
-
-
-(defun shortest-path-improved (end queue net))
+(defun shortest-path-improved (start end net)
+  (bfs-improved end (list(list start)) net))
