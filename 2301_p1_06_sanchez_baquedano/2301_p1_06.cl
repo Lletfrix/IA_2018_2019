@@ -506,6 +506,12 @@ BFS(grafo G, nodo_inical s){
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  ;;; Breadth-first-search in graphs
  ;;;
+ ;;; INPUT:   end: nodo final
+ ;;;          queue: cola de nodos por explorar
+ ;;;          net: grafo
+ ;;; OUTPUT: arbol de busqueda en anchura
+ ;;;         nil si no lo encuentra
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  (defun bfs (end queue net)
     (if (null queue) ;; Si la cola esta vacia devuelve una lista vacia
         '()
@@ -535,7 +541,34 @@ BFS(grafo G, nodo_inical s){
                   (e a b d g h) (f b h) (g c d e h) (h d e f g)))
 
 Seguramente la salida sea stack overflow.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;5.8
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; bfs-improved
+;;; busqueda en anchura mejorada sin recursion infinita
+;;; INPUT:   end: nodo final
+;;;          queue: cola de nodos por explorar
+;;;          net: grafo
+;;;          expanded-nodes: nodos ya expandidos o vistados
+;;; OUTPUT: arbol de busqueda en anchura
+;;;         nil si no lo encuentra
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun bfs-improved (end queue net expanded-nodes)
+   (if (NULL queue) ;; Si la cola esta vacia devuelve una lista vacia
+       '()
+   ;; Inicializa path como el primer elemento de queue y node como el primero
+   ;; de path
+   (let* ((path (first queue))
+           (node (first path)))
+     ;; Si node es igual a el nodo buscado devolvemos el camino inverso de path
+     (if (EQL node end)
+         (reverse path)
+         if(find node expanded-nodes)
+            (bfs-improved end (CDR queue) net expanded-nodes)
+            (bfs-improved ebd (APPEND (CDR queue) (new-paths path
+                        (CONS node expanded-nodes) net)) net expanded-nodes)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; shortest-path-improved
@@ -546,7 +579,5 @@ Seguramente la salida sea stack overflow.
 ;;;          net: grafo
 ;;; OUTPUT: camino mas corto entre dos nodos
 ;;;         nil si no lo encuentra
-(defun bfs-improved (end queue net))
-
-
-(defun shortest-path-improved (end queue net))
+(defun shortest-path-improved (start end net)
+  (bfs-improved end (list(list start)) net))
