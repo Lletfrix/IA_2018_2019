@@ -3,13 +3,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; cosine-distance-rec (x y)
-;;; Calcula la distancia coseno de un vector de forma recursiva
+;;; scalar-product-rec (x y)
+;;; Calcula el producto escalar de dos vectores x e y de forma recursiva
 ;;; Se asume que los dos vectores de entrada tienen la misma longitud.
 ;;;
 ;;; INPUT: x: vector, representado como una lista
 ;;;         y: vector, representado como una lista
-;;; OUTPUT: distancia coseno entre x e y
+;;; OUTPUT: producto escalar de x e y
 ;;;
 (defun scalar-product-rec (x y)
   (IF (OR (NULL x) (NULL y))
@@ -18,9 +18,25 @@
         (* (CAR x) (CAR y))
         (scalar-product-rec (CDR x) (CDR y)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; squared-norm-rec (x)
+;;; Calcula la norma al cuadrado de un vector x
+;;; INPUT: x: vector, representado como una lista
+;;; OUTPUT: norma al cuadrado de x
+;;;
 (defun squared-norm-rec (x)
   (scalar-product-rec x x))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; cosine-distance-rec (x y)
+;;; Calcula la distancia coseno de un vector de forma recursiva
+;;; Se asume que los dos vectores de entrada tienen la misma longitud.
+;;;
+;;; INPUT: x: vector, representado como una lista
+;;;         y: vector, representado como una lista
+;;; OUTPUT: distancia coseno entre x e y
+;;;
 (defun cosine-distance-rec (x y)
   (UNLESS (OR (= 0 (squared-norm-rec x)) (= 0 (squared-norm-rec y)))
       (-
@@ -31,6 +47,28 @@
             (* (squared-norm-rec x) (squared-norm-rec y)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; scalar-product-mapcar (x y)
+;;; Calcula el producto escalar de dos vectores x e y usando mapcar
+;;; Se asume que los dos vectores de entrada tienen la misma longitud.
+;;;
+;;; INPUT:  x: vector, representado como una lista
+;;;         y: vector, representado como una lista
+;;; OUTPUT: producto escalar de x e y
+;;;
+(defun scalar-product-mapcar (x y)
+  (apply #'+
+    (mapcar #'* x y)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; squared-norm-mapcar (x)
+;;; Calcula la norma al cuadrado de un vector x
+;;; INPUT: x: vector, representado como una lista
+;;; OUTPUT: norma al cuadrado de x
+;;;
+(defun squared-norm-mapcar (x)
+  (scalar-product-mapcar x x))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; cosine-distance-mapcar
 ;;; Calcula la distancia coseno de un vector usando mapcar
 ;;; Se asume que los dos vectores de entrada tienen la misma longitud.
@@ -39,14 +77,6 @@
 ;;;         y: vector, representado como una lista
 ;;; OUTPUT: distancia coseno entre x e y
 ;;;
-
-(defun scalar-product-mapcar (x y)
-  (apply #'+
-    (mapcar #'* x y)))
-
-(defun squared-norm-mapcar (x)
-  (scalar-product-mapcar x x))
-
 (defun cosine-distance-mapcar (x y)
   (UNLESS (OR (= 0 (squared-norm-mapcar x)) (= 0 (squared-norm-mapcar y)))
       (-
@@ -90,6 +120,16 @@
           (insert-in-descending-order vector (CAR lst-of-vectors) (order-vectors-cosine-distance vector (CDR lst-of-vectors) confidence-level) 'less-likelihood) ; TODO: Explicar
           (order-vectors-cosine-distance vector (CDR lst-of-vectors) confidence-level))))
 
+
+(defun get-min-category (categories text distance-measure)
+  (IF (NULL categories)
+      '(NIL 3)
+      (let ((current-distance (funcall distance-measure (CDR text) (CDR (CAR categories))))
+            (last-pair (get-min-category (CDR categories) text distance-measure)))
+        (IF (< current-distance (NTH 1 last-pair))
+            (CONS (CAR (CAR categories)) (LIST current-distance))
+            last-pair))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; get-vectors-category (categories vectors distance-measure)
 ;;; Clasifica a los textos en categorias .
@@ -102,15 +142,6 @@
 ;;; OUTPUT: Pares formados por el vector que identifica la categoria
 ;;;         de menor distancia , junto con el valor de dicha distancia
 ;;;
-(defun get-min-category (categories text distance-measure)
-  (IF (NULL categories)
-      '(NIL 3)
-      (let ((current-distance (funcall distance-measure (CDR text) (CDR (CAR categories))))
-            (last-pair (get-min-category (CDR categories) text distance-measure)))
-        (IF (< current-distance (NTH 1 last-pair))
-            (CONS (CAR (CAR categories)) (LIST current-distance))
-            last-pair))))
-
 (defun get-vectors-category (categories texts distance-measure)
   (UNLESS (OR (NULL (CAR categories)) (NULL (CAR texts))) ; TODO: preguntar si es necesario considerarlo '() '()
       (UNLESS (OR (NULL texts)) ; Condicion de recursion // TODO: Preguntar si es necesario
@@ -312,23 +343,57 @@
       (negative-literal-p x)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; FUNCIONES DE DERIVACION
+;;; FUNCIONES DE DERIVACION
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; double-neg (x)
+;;; Deshace la doble negacion de una fbf
+;;; INPUT: formula bien formada  x representada como lista
+;;; OUTPUT: la fbf x sin la doble negacion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun double-neg (x)
   (CDR (CAR (CDR x))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; neg-conj (x)
+;;; Aplica las formula de De Morgan a la negacion de un conjuncion
+;;; INPUT: formula bien formada  x representada como lista
+;;; OUTPUT: la fbf x tras aplicar De Morgan
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun neg-conj (x)
   (let ( (literals (CDR (CAR (CDR x)) ) ) )
     (list +or+ (list +not+ (CAR literals)) (cons +not+ (CDR literals)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; neg-disj (x)
+;;; Aplica las formula de De Morgan a la negacion de una disjuncion
+;;; INPUT: formula bien formada  x representada como lista
+;;; OUTPUT: la fbf x tras aplicar De Morgan
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun neg-disj (x)
   (let ( (literals (CDR (CAR (CDR x)) ) ) )
   (list +and+ (list +not+ (CAR literals)) (cons +not+ (CDR literals)))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; implies (x)
+;;; Transforma la implicacion x en un disjuncion aplicando las
+;;; reglas de derivacion
+;;; INPUT: formula bien formada  x representada como lista
+;;; OUTPUT: la fbf x tras la regla de derivacion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun implies (x)
   (let ((literals (CDR x) ))
   (list +or+ (list +not+ (CAR literals)) (CAR (CDR literals)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; neg-implies (x)
+;;; Transforma la negacion de una implicacion x en un conjuncion aplicando
+;;; las reglas de derivacion y De Morgan
+;;; INPUT: formula bien formada  x representada como lista
+;;; OUTPUT: la fbf x tras la regla de derivacion y De Morgan
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun neg-implies (x)
   (let ((literals (CDR (CAR (CDR x) ))))
   (list +and+ (CAR literals) (cons +not+ (CDR literals)))))
@@ -336,10 +401,24 @@
 ;(defun neg-implies (x)
   ;(neg-disj  (list +not+ (implies (CAR (CDR x) )))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; bicond (x)
+;;; Transforma la doble implicacion x en una conjuncion de disjunciones
+;;; aplicando las reglas de derivacion
+;;; INPUT: formula bien formada  x representada como lista
+;;; OUTPUT: la fbf x tras la regla de derivacion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun bicond (x)
   (let ((literals (CDR x) ))
   (list +and+ (implies (cons +cond+ literals) ) (implies (cons +cond+ (reverse literals) ) ))))
 
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; bicond (x)
+  ;;; Transforma la negacion de una doble implicacion x en una disjuncion
+  ;;; de conjunciones aplicando las reglas de derivacion y De Morgan
+  ;;; INPUT: formula bien formada  x representada como lista
+  ;;; OUTPUT: la fbf x tras la regla de derivacion y De Morgan
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun neg-bicond (x)
   (let ((literals (CDR (CAR (CDR x) ))))
   (list +or+ (neg-implies (list +not+ (cons +cond+ literals)) ) (neg-implies (list +not+ (cons +cond+ (reverse literals) ) )))))
