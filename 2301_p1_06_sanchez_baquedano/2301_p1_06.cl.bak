@@ -99,6 +99,8 @@
 ;;;
 ;;;
 
+;; '(2 3 4) '((1 2 3) (1 2 0)) 0.3
+
 (defun likelihood (x y)
   (- 1 (cosine-distance-mapcar x y)))
 
@@ -164,7 +166,7 @@
 (defun h-value (current-point f df)
   (/
     (funcall f current-point)
-    (funcall df current-point)))
+    (funcall df current-point))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; newton
 ;;; Estima el cero de una funcion mediante Newton-Raphson
@@ -244,20 +246,6 @@
     x
     (list x)))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; merge-two-lst
-;;; Concatena dos listas sin modificar las originales
-;;;
-;;; INPUT: lst1: lista a unir
-;;;        lst2: lista a unir
-;;;
-;;; OUTPUT: listas unidas
-(defun merge-two-lst (lst1 lst2)
-  (IF (NULL lst1)
-      lst2
-      (CONS (CAR lst1) (merge-two-lst (CDR lst1) lst2))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-elt-lst
 ;;; Combina un elemento dado con todos los elementos de una lista
@@ -268,14 +256,10 @@
 ;;; OUTPUT: lista con las combinacion del elemento con cada uno de los
 ;;;         de la lista
 (defun combine-elt-lst (elt lst)
-  (IF (EQUAL lst '(NIL))
-      (to-list elt)
-  (mapcar
-      (lambda (x)
-        (if (listp elt) ;Si elt es un conjunto
-            (merge-two-lst elt (list x))
-          (list elt x)))
-      lst)))
+    (UNLESS (NULL elt)
+      (IF (equal lst '(NIL))
+          (list elt)
+          (mapcar #'(lambda(x) (cons elt (to-list x) )  ) lst)   )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-lst-lst
@@ -286,11 +270,10 @@
 ;;;
 ;;; OUTPUT: producto cartesiano de las dos listas
 
-(defun combine-lst-lst (a b)
-  (mapcan
-    (lambda (ai)
-      (combine-elt-lst ai b))
-    a))
+(defun combine-lst-lst (lst1 lst2) ; TODO: Mirar algunos casos raros
+  (IF (EQUAL lst1 '(NIL))
+      lst2
+      (mapcan #'(lambda(x) (combine-elt-lst x lst2)) lst1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; combine-list-of-lsts
@@ -302,9 +285,10 @@
 ;;;
 ;;; OUTPUT: lista con todas las posibles combinaciones de elementos
 
-(defun combine-list-of-lsts (a)
-  (UNLESS (NULL a)
-      (reduce #'combine-lst-lst a)))
+(defun combine-list-of-lsts (lstolsts)
+  (IF (OR (NULL lstolsts) (EQUAL '((NIL)) lstolsts))
+      '(NIL) ; Elemento neutro del producto cartesiano
+      (mapcan #'(lambda(x) (combine-elt-lst x (combine-list-of-lsts (CDR lstolsts)) ) ) (CAR lstolsts))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 4
@@ -359,7 +343,7 @@
       (negative-literal-p x)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; FUNCIONES DE DERIVACION
+;;; FUNCIONES DE DERIVACION
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -369,7 +353,7 @@
 ;;; OUTPUT: la fbf x sin la doble negacion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun double-neg (x)
-  (CAR (CDR (CAR (CDR x)))))
+  (CDR (CAR (CDR x))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; neg-conj (x)
@@ -378,7 +362,8 @@
 ;;; OUTPUT: la fbf x tras aplicar De Morgan
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun neg-conj (x)
-  (cons +or+ (combine-elt-lst +not+ (CDR (CAR (CDR x))))))
+  (let ( (literals (CDR (CAR (CDR x)) ) ) )
+    (list +or+ (list +not+ (CAR literals)) (cons +not+ (CDR literals)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; neg-disj (x)
@@ -387,7 +372,9 @@
 ;;; OUTPUT: la fbf x tras aplicar De Morgan
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun neg-disj (x)
-  (cons +and+ (combine-elt-lst +not+ (CDR (CAR (CDR x))))))
+  (let ( (literals (CDR (CAR (CDR x)) ) ) )
+  (list +and+ (list +not+ (CAR literals)) (cons +not+ (CDR literals)))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; implies (x)
@@ -411,6 +398,9 @@
   (let ((literals (CDR (CAR (CDR x) ))))
   (list +and+ (CAR literals) (cons +not+ (CDR literals)))))
 
+;(defun neg-implies (x)
+  ;(neg-disj  (list +not+ (implies (CAR (CDR x) )))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; bicond (x)
 ;;; Transforma la doble implicacion x en una conjuncion de disjunciones
@@ -422,96 +412,19 @@
   (let ((literals (CDR x) ))
   (list +and+ (implies (cons +cond+ literals) ) (implies (cons +cond+ (reverse literals) ) ))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; neg-bicond (x)
-;;; Transforma la negacion de una doble implicacion x en una disjuncion
-;;; de conjunciones aplicando las reglas de derivacion y De Morgan
-;;; INPUT: formula bien formada  x representada como lista
-;;; OUTPUT: la fbf x tras la regla de derivacion y De Morgan
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; bicond (x)
+  ;;; Transforma la negacion de una doble implicacion x en una disjuncion
+  ;;; de conjunciones aplicando las reglas de derivacion y De Morgan
+  ;;; INPUT: formula bien formada  x representada como lista
+  ;;; OUTPUT: la fbf x tras la regla de derivacion y De Morgan
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun neg-bicond (x)
   (let ((literals (CDR (CAR (CDR x) ))))
   (list +or+ (neg-implies (list +not+ (cons +cond+ literals)) ) (neg-implies (list +not+ (cons +cond+ (reverse literals) ) )))))
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; expand-truth-tree-aux
-;;; Recibe una expresion y construye una lista de ramas a partir de
-;;; disyunciones o conjunciones, pasando a forma normal negativa.
-;;;
-;;; INPUT  : fbf - Formula bien formada (FBF) a analizar.
-;;; OUTPUT : Lista de ramas
-;;;
-(defun expand-truth-tree-aux (fbf)
-  (cond
-    ((literal-p fbf)
-        (list fbf))
-    ((unary-connector-p (CAR fbf))
-        (cond
-          ((unary-connector-p (CAR (CAR (CDR fbf))))
-              (expand-truth-tree-aux (double-neg fbf)))
-
-          ((cond-connector-p (CAR (CAR (CDR fbf))))
-              (expand-truth-tree-aux (neg-implies fbf)))
-
-          ((bicond-connector-p (CAR (CAR (CDR fbf))))
-              (expand-truth-tree-aux (neg-bicond fbf)))
-
-          ((n-ary-connector-p (CAR (CAR (CDR fbf))))
-              (if (eql (CAR (CAR (CDR fbf))) +or+)
-                  (expand-truth-tree-aux (neg-disj fbf))
-                  (expand-truth-tree-aux (neg-conj fbf))))))
-
-    ((cond-connector-p (CAR fbf))
-        (expand-truth-tree-aux (implies fbf)))
-
-    ((bicond-connector-p (CAR fbf))
-        (expand-truth-tree-aux (bicond fbf)))
-
-    ((n-ary-connector-p (CAR fbf))
-        (if (eql (CAR fbf) +and+)
-            (UNLESS (NULL (CDR fbf))
-                (nconc (expand-truth-tree-aux (CAR (CDR fbf))) (expand-truth-tree-aux (cons +and+ (CDDR fbf)))))
-
-            (IF (NULL (CDDR fbf))
-              (expand-truth-tree-aux (CAR (CDR fbf)))
-              (mapcan (lambda (x) (list (expand-truth-tree-aux x))) (combine-list-of-lsts  (list (list +or+) (CDR fbf)))))))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; evaluate (fbf)
-;;; Comprueba si una fbf es satisfacible
-;;;
-;;; INPUT  : auxlist: lista de literales encontrados
-;;;        : fbf - Formula bien formada (FBF) a analizar.
-;;; OUTPUT : T   - FBF es SAT
-;;;          N   - FBF es UNSAT
-;;;
-(defun evaluate (auxlist fbf)
-  (IF (NULL fbf)
-      T
-      (IF (LISTP (CAR fbf))
-          (UNLESS (FIND (CAR (CDR (CAR fbf))) (CAR auxlist) :test #'EQUAL)
-              (IF (FIND (CAR (CDR (CAR fbf))) (CAR (CDR auxlist)) :test #'EQUAL)
-                  (evaluate auxlist (CDR fbf))
-                  (evaluate (CONS (CAR auxlist) (LIST (NCONC (LIST (CAR (CDR (CAR fbf)))) (CAR (CDR auxlist)))))  (CDR fbf))))
-          (UNLESS (FIND (CAR fbf) (CAR (CDR auxlist)) :test #'EQUAL)
-              (IF (FIND (CAR fbf) (CAR auxlist) :test #'EQUAL)
-                  (evaluate auxlist (CDR fbf))
-                  (evaluate (LIST (NCONC (CAR auxlist) (LIST (CAR fbf))) (CAR (CDR auxlist))) (CDR fbf)))))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; branch-is-sat (fbf)
-;;; Comprueba si una rama es satisfacible
-;;;
-;;; INPUT  : fbf - Formula bien formada (FBF) a analizar.
-;;; OUTPUT : T   - FBF es SAT
-;;;          N   - FBF es UNSAT
-;;;
-(defun branch-is-sat (fbf)
-    (evaluate nil fbf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; truth-tree
@@ -522,12 +435,68 @@
 ;;; OUTPUT : T   - FBF es SAT
 ;;;          N   - FBF es UNSAT
 ;;;
-(defun truth-tree (fbf)
-  (UNLESS (NULL fbf)
-      (some #'branch-is-sat (list (expand-truth-tree-aux fbf)))))
+(defun truth-tree (fbf))
+
+(defun expand-truth-tree-aux (fbf)
+  (cond
+    ((literal-p fbf)
+     (list fbf))
+
+    ((unary-connector-p (CAR fbf))
+     (cond
+       ((unary-connector-p (CAR (CAR (CDR fbf))))
+        (expand-truth-tree-aux (double-neg fbf)))
+
+       ((cond-connector-p (CAR (CAR (CDR fbf))))
+        (expand-truth-tree-aux (neg-implies fbf)))
+
+       ((bicond-connector-p (CAR (CAR (CDR fbf))))
+        (expand-truth-tree-aux (neg-bicond fbf)))
+
+       ((n-ary-connector-p (CAR (CAR (CDR fbf))))
+        (if (eql (CAR (CAR (CDR fbf))) +or+)
+            (expand-truth-tree-aux (neg-disj fbf))
+            (expand-truth tree-aux (neg-conj fbf))))))
+
+    ((cond-connector-p (CAR fbf))
+     (expand-truth-tree-aux (implies fbf)))
+
+    ((bicond-connector-p (CAR fbf))
+     (expand-truth-tree-aux (bicond fbf)))
+
+    ((n-ary-connector-p (CAR fbf))
+     (if (eql (CAR (CAR (CDR fbf))) +or+)
+         (nconc (expand-truth-tree-aux (CAR (CDR fbf))) (expand-truth-tree-aux (CAR (CDR (CDR fbf)))))
+         (combine-lst-lst (expand-truth-tree-aux (CAR (CDR fbf) )) (expand-truth-tree-aux (CAR (CDR (CDR fbf)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 5
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 5.2
+BFS(grafo G, nodo_inical s){
+  para cada nodo u de G{
+    estado[u]=NO_VISITADO
+    distancia[u]= INFINITO
+    padre[u]=null
+  }
+  estado[s]=VISITADO
+  distancia[s]=0
+  crear_cola(Q);
+  Encolar(Q, s)
+  while(!vacia(Q)){
+    u = extraer(Q)
+    para cada v de adyacencia[u]{
+      if(estado[v]==NO_VISITADO){
+        estado[v]= VISITADO
+        distancia[v] = distancia[u]+1
+        padre[v]=u
+        Encolar(Q,v)
+      }
+    }
+  }
+}
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -543,26 +512,36 @@
  ;;; OUTPUT: arbol de busqueda en anchura
  ;;;         nil si no lo encuentra
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun bfs (end queue net)
-  (if (null queue) ;; Si la cola esta vacia devuelve una lista vacia
-      '()
-  ;; Inicializa path como el primer elemento de queue y node como el primero
-  ;; de path
-  (let* ((path (first queue))
-          (node (first path)))
-    ;; Si node es igual a el nodo buscado devolvemos el camino inverso de path
-    (if (eql node end)
-        (reverse path)
-        ;; Si no, llama recursivamente a BFS
-        (bfs end
-          (append (rest queue)
-                  (new-paths path node net))
-          net )))))
+ (defun bfs (end queue net)
+    (if (null queue) ;; Si la cola esta vacia devuelve una lista vacia
+        '()
+    ;; Inicializa path como el primer elemento de queue y node como el primero
+    ;; de path
+    (let* ((path (first queue))
+            (node (first path)))
+      ;; Si node es igual a el nodo buscado devolvemos el camino inverso de path
+      (if (eql node end)
+          (reverse path)
+          ;; Si no, llama recursivamente a BFS
+          (bfs end
+            (append (rest queue)
+                    (new-paths path node net))
+            net )))))
 
-(defun new-paths (path node net)
-  (mapcar #'(lambda (n)
-              (cons n path))
-          (rest (assoc node net))))
+ (defun new-paths (path node net)
+    (mapcar #'(lambda (n)
+                (cons n path))
+            (rest (assoc node net))))
+ ;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 5.7
+(shortest-path 'b 'g '((a b c d e) (b a d e f) (c a g) (d a b e g h)
+                  (e a b d g h) (f b h) (g c d e h) (h d e f g)))
+
+Seguramente la salida sea stack overflow.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;5.8
@@ -590,6 +569,7 @@
             (bfs-improved end (CDR queue) net expanded-nodes)
             (bfs-improved ebd (APPEND (CDR queue) (new-paths path
                         (CONS node expanded-nodes) net)) net expanded-nodes)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; shortest-path-improved
 ;;; Version de busqueda en anchura que no entra en recursion
@@ -600,4 +580,4 @@
 ;;; OUTPUT: camino mas corto entre dos nodos
 ;;;         nil si no lo encuentra
 (defun shortest-path-improved (start end net)
-  (bfs-improved end (list(list start)) net nil))
+  (bfs-improved end (list(list start)) net))
