@@ -361,38 +361,64 @@
 (defun expand-truth-tree-aux (fbf)
   (cond
     ((literal-p fbf)
-        (list fbf))
+     (list fbf))
 
     ((unary-connector-p (CAR fbf))
-        (cond
-          ((unary-connector-p (CAR (CAR (CDR fbf))))
-              (expand-truth-tree-aux (double-neg fbf)))
+     (cond
+       ((unary-connector-p (CAR (CAR (CDR fbf))))
+        (expand-truth-tree-aux (double-neg fbf)))
 
-          ((cond-connector-p (CAR (CAR (CDR fbf))))
-              (expand-truth-tree-aux (neg-implies fbf)))
+       ((cond-connector-p (CAR (CAR (CDR fbf))))
+        (expand-truth-tree-aux (neg-implies fbf)))
 
-          ((bicond-connector-p (CAR (CAR (CDR fbf))))
-              (expand-truth-tree-aux (neg-bicond fbf)))
+       ((bicond-connector-p (CAR (CAR (CDR fbf))))
+        (expand-truth-tree-aux (neg-bicond fbf)))
 
-          ((n-ary-connector-p (CAR (CAR (CDR fbf))))
-              (if (eql (CAR (CAR (CDR fbf))) +or+)
-                  (expand-truth-tree-aux (neg-disj fbf))
-                  (expand-truth tree-aux (neg-conj fbf))))))
+       ((n-ary-connector-p (CAR (CAR (CDR fbf))))
+        (if (eql (CAR (CAR (CDR fbf))) +or+)
+            (expand-truth-tree-aux (neg-disj fbf))
+            (expand-truth tree-aux (neg-conj fbf))))))
 
     ((cond-connector-p (CAR fbf))
-        (expand-truth-tree-aux (implies fbf)))
+     (expand-truth-tree-aux (implies fbf)))
 
     ((bicond-connector-p (CAR fbf))
-        (expand-truth-tree-aux (bicond fbf)))
+     (expand-truth-tree-aux (bicond fbf)))
 
     ((n-ary-connector-p (CAR fbf))
-        (if (eql (CAR (CAR (CDR fbf))) +or+)
-            (nconc (expand-truth-tree-aux (CAR (CDR fbf))) (expand-truth-tree-aux (CAR (CDR (CDR fbf)))))
-            (combine-lst-lst (expand-truth-tree-aux (CAR (CDR fbf) )) (expand-truth-tree-aux (CAR (CDR (CDR fbf)))))))))
+     (if (eql (CAR (CAR (CDR fbf))) +or+)
+         (nconc (expand-truth-tree-aux (CAR (CDR fbf))) (expand-truth-tree-aux (CAR (CDR (CDR fbf)))))
+         (combine-lst-lst (expand-truth-tree-aux (CAR (CDR fbf) )) (expand-truth-tree-aux (CAR (CDR (CDR fbf)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EJERCICIO 5
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EJERCICIO 5.2
+BFS(grafo G, nodo_inical s)
+  para cada nodo u de G(
+                        estado[u]=NO_VISITADO
+                        distancia[u]= INFINITO
+                        padre[u]=null)
+  estado[s]=VISITADO
+  distancia[s]=0
+  crear_cola(Q);
+  Encolar(Q, s)
+  while(!vacia(Q)){}
+    u = extraer(Q)
+    para cada v de adyacencia[u]{}
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; shortest-path-improved
@@ -403,7 +429,6 @@
 ;;;          net: grafo
 ;;; OUTPUT: camino mas corto entre dos nodos
 ;;;         nil si no lo encuentra
-
 (defun bfs-improved (end queue net))
 
 
