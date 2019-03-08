@@ -147,14 +147,20 @@
 ;;    The cost (a number) or NIL if the state is not in the sensor list
 ;;
 ;;  It is necessary to define two functions: the first which returns the
-;;  estimate of teh travel time, the second which returns the estimate of
+;;  estimate of the travel time, the second which returns the estimate of
 ;;  the cost of travel
 
 (defun f-h-time (state sensors)
-  )
+  (CAR (get-costs state sensors)))
 
 (defun f-h-price (state sensors)
-  )
+  (CADR (get-costs state sensors)))
+
+(defun get-costs (state sensors)
+  (UNLESS (NULL sensors)
+      (if (equal state (CAAR sensors))
+          (CADAR sensors) ; CADAR := (CAR (CDR (CAR )))
+          (get-costs state (CDR sensors)))))
 ;;
 ;; END: Exercise 1 -- Evaluation of the heuristic
 ;;
