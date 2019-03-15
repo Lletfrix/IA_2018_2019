@@ -156,11 +156,20 @@
 (defun f-h-price (state sensors)
   (CADR (get-costs state sensors)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; get-costs (state sensors)
+;;; Devuelve el par (tiempo, coste) asociado a un estado
+;;; Se asume que los dos vectores de entrada tienen la misma longitud.
+;;;
+;;; INPUT:  state: nombre de estado
+;;;         sensors: lista de pares (nombre de estado, (tiempo, coste))
+;;; OUTPUT: Par (tiempo, coste) para el nombre de estado dado. NIL si no
+;;;         existe.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun get-costs (state sensors)
-  (UNLESS (NULL sensors)
-      (if (equal state (CAAR sensors))
-          (CADAR sensors) ; CADAR := (CAR (CDR (CAR )))
-          (get-costs state (CDR sensors)))))
+      (CADR (assoc state sensors)))
 ;;
 ;; END: Exercise 1 -- Evaluation of the heuristic
 ;;
