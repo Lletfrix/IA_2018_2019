@@ -202,7 +202,10 @@
 ;;    the destination in the states to which the current one is connected
 ;;
 (defun navigate (state lst-edges cfun  name &optional forbidden )
-  )
+  (mapcan #'(lambda(n)
+    (WHEN (AND (EQUAL state (CAR n)) (NULL (MEMBER (CADR n) forbidden)))
+        (list (make-action :NAME name :ORIGIN state :FINAL (CADR n) :COST (funcall cfun n)))))
+    lst-edges))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -213,11 +216,13 @@
 ;; from the current city to the cities reachable from it by canal navigation.
 ;;
 (defun navigate-canal-time (state canals)
-  )
+  (navigate state canals #'CAADDR 'navigate-canal-time))
 
 (defun navigate-canal-price (state canals)
-  )
+  (navigate state canals #'CADADDR 'navigate-canal-price))
 
+(defun CADADDR (l)
+  (CAR (CDADDR l)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Navigation by train
@@ -229,10 +234,10 @@
 ;; Note that this function takes as a parameter a list of forbidden cities.
 ;;
 (defun navigate-train-time (state trains forbidden)
-  )
+  (navigate state trains #'CAADDR 'navigate-train-time forbidden))
 
 (defun navigate-train-price (state trains forbidden)
-  )
+  (navigate state trains #'CADADDR 'navigate-train-price forbidden))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -250,7 +255,7 @@
 ;;    node:       node structure that contains, in the chain of parent-nodes,
 ;;                a path starting at the initial state
 ;;    destinations: list with the names of the destination cities
-;;    mandatory:  list with the names of the cities that is mandatoryu to visit
+;;    mandatory:  list with the names of the cities that is mandatory to visit
 ;;
 ;;  Returns
 ;;    T: the path is a valid path to the final state
@@ -258,7 +263,12 @@
 ;;         of the mandatory cities are missing from the path.
 ;;
 (defun f-goal-test (node destination mandatory)
-  )
+  (let ((path (reverse (node-names node))))
+  (WHEN (AND (NOT (NULL (INTERSECTION destination (LAST path)))) (EQUAL mandatory (INTERSECTION path mandatory))) T)))
+
+(defun node-names (node)
+  (UNLESS (NULL (node-parent node))
+  (cons (node-state node) (node-names (node-parent node)))))
 
 ;;
 ;; END: Exercise 3 -- Goal test
