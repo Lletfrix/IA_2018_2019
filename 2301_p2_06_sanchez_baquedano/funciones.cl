@@ -427,6 +427,14 @@
 ;;;  and calls insert-nodes
 
 
+  (defun insert-in-order (n lst node-compare-p)
+    (IF (NULL lst)
+        (cons n lst)
+        (IF (funcall node-compare-p n (CAR lst))
+            (cons n lst)
+            (cons (CAR lst) (insert-in-order n (CDR lst) node-compare-p)))))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Inserts a list of nodes in an ordered list keeping the result list
@@ -446,7 +454,9 @@
 ;;   criterion node-compare-p.
 ;;
 (defun insert-nodes (nodes lst-nodes node-compare-p)
-  )
+  (IF (NULL (CDR nodes))
+      (insert-in-order (CAR nodes) lst-nodes node-compare-p)
+      (insert-in-order (CAR nodes) (insert-nodes (CDR nodes) lst-nodes node-compare-p) node-compare-p)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
