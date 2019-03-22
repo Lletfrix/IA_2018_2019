@@ -343,12 +343,11 @@
     :states               *cities*
     :initial-state        *origin*
     :f-h                  #'(lambda (state) (f-h-time state *estimate*))
-    :f-goal-testing       #'(lambda (node) (f-goal-test node *destination* *mandatory*))
+    :f-goal-test          #'(lambda (node) (f-goal-test node *destination* *mandatory*))
     :f-search-state-equal #'(lambda (node-1 node-2) (f-search-state-equal node-1 node-2 *mandatory*))
     :operators            (list #'(lambda (node) (navigate-canal-time (node-state node) *canals*)) #'(lambda (node) (navigate-train-time (node-state node) *trains* *forbidden*)))
    )
   )
-0
 ;;
 ;;  END: Exercise 5 -- Define the problem structure
 ;;
@@ -390,8 +389,14 @@
 ;;    given one
 ;;
 (defun expand-node (node problem)
-  )
+  (mapcar #'(lambda(x) (expand-node-action node (action-final x) x)) (expand-states node problem)))
 
+(defun expand-states (node problem)
+  (mapcan #'(lambda(op) (funcall op node)) (problem-operators problem)))
+
+(defun expand-node-action (node state action)
+  (UNLESS (NULL action)
+  (make-node :state state :action action :parent node)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;  BEGIN Exercise 7 -- Node list management
