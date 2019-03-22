@@ -264,11 +264,14 @@
 ;;
 (defun f-goal-test (node destination mandatory)
   (let ((path (reverse (node-names node))))
-  (WHEN (AND (NOT (NULL (INTERSECTION destination (LAST path)))) (EQUAL mandatory (INTERSECTION path mandatory))) T)))
+  (AND (is-subset (last path) destination) (is-subset mandatory path))))
 
 (defun node-names (node)
   (UNLESS (NULL (node-parent node))
   (cons (node-state node) (node-names (node-parent node)))))
+
+(defun is-subset (A B)
+  (NULL (set-difference A B)))
 
 ;;
 ;; END: Exercise 3 -- Goal test
@@ -297,7 +300,12 @@
 ;;    NIL: The nodes are not equivalent
 ;;
 (defun f-search-state-equal (node-1 node-2 &optional mandatory)
-  )
+  (NULL (AND (EQUAL (node-state node-1)(node-state node-2))
+             (set-equal (intersection (node-names node-1) mandatory)
+                        (intersection (node-names node-2) mandatory)))))
+
+(defun set-equal (A B)
+  (AND (is-subset A B) (is-subset B A)))
 
 ;;
 ;; END: Exercise 4 -- Equal predicate for search states
@@ -321,14 +329,26 @@
 
 (defparameter *travel-cheap*
   (make-problem
+    :states               *cities*
+    :initial-state        *origin*
+    :f-h                  #'(lambda (state) (f-h-price state *estimate*))
+    :f-goal-test          #'(lambda (node) (f-goal-test node *destination* *mandatory*))
+    :f-search-state-equal #'(lambda (node-1 node-2) (f-search-state-equal node-1 node-2 *mandatory*))
+    :operators            (list #'(lambda (node) (navigate-canal-price (node-state node) *canals*)) #'(lambda (node) (navigate-train-price (node-state node) *trains* *forbidden*)))
    )
   )
 
 (defparameter *travel-fast*
   (make-problem
+    :states               *cities*
+    :initial-state        *origin*
+    :f-h                  #'(lambda (state) (f-h-time state *estimate*))
+    :f-goal-testing       #'(lambda (node) (f-goal-test node *destination* *mandatory*))
+    :f-search-state-equal #'(lambda (node-1 node-2) (f-search-state-equal node-1 node-2 *mandatory*))
+    :operators            (list #'(lambda (node) (navigate-canal-time (node-state node) *canals*)) #'(lambda (node) (navigate-train-time (node-state node) *trains* *forbidden*)))
    )
   )
-
+0
 ;;
 ;;  END: Exercise 5 -- Define the problem structure
 ;;
