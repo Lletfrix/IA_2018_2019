@@ -221,6 +221,12 @@
 (defun navigate-canal-price (state canals)
   (navigate state canals #'CADADDR 'navigate-canal-price))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; CADADDR
+;;
+;; Gets the CAR of the (CDADDR l)
+;;
 (defun CADADDR (l)
   (CAR (CDADDR l)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -266,12 +272,37 @@
   (let ((path (reverse (node-names node))))
   (AND (is-subset (last path) destination) (is-subset mandatory path))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; node-names
+;;
+;;  Gets a list with the path implicit in the node struct
+;;
+;;  Input:
+;;    node:       node structure that contains, in the chain of parent-nodes,
+;;                a path starting at the initial state
+;;  Returns
+;;    The path implicit in the node structure
+;;
 (defun node-names (node)
   (UNLESS (NULL node)
       (IF (NULL (node-parent node))
           (list (node-state node))
           (cons (node-state node) (node-names (node-parent node))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; is-subset
+;;
+;;  Checks if given two sets the first is subset of the latter
+;;
+;;  Input:
+;;       A:       list representing a set
+;;       B:       list representing a set
+;;  Returns
+;;       T:       if A is subset of B
+;;     NIL:       if A is not a subset of B
+;;
 (defun is-subset (A B)
   (NULL (set-difference A B)))
 
@@ -306,6 +337,19 @@
         (set-equal  (intersection (node-names node-1) mandatory)
                     (intersection (node-names node-2) mandatory))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; set-equal
+;;
+;;  Checks if given two sets, they are the same
+;;
+;;  Input:
+;;       A:       list representing a set
+;;       B:       list representing a set
+;;  Returns
+;;       T:       if A is equal to B
+;;     NIL:       if A is not equal to B
+;;
 (defun set-equal (A B)
   (AND (is-subset A B) (is-subset B A)))
 
@@ -393,11 +437,43 @@
 (defun expand-node (node problem)
   (mapcar #'(lambda(x)
             (expand-node-action (action-final x) node x (action-cost x) (problem-f-h problem)))
-            (expand-states node problem)))
+            (expand-actions node problem)))
 
-(defun expand-states (node problem)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  expand-actions
+;;
+;;  Given a node and a problem, gets all the actions that can be done
+;;  from node in the problem.
+;;
+;;  Input:
+;;    node:   the node structure from which we start.
+;;    problem: the problem structure with the list of operators
+;;
+;;  Returns:
+;;    A list (node_1,...,node_n) of actions that can be made
+;;
+(defun expand-actions (node problem)
   (mapcan #'(lambda(op) (funcall op node)) (problem-operators problem)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  expand-node-action
+;;
+;;  Given state, parent, action, cost and a heuristic functions, it makes
+;;  a new node and initilize it's fields as necessary
+;;
+;;  Input:
+;;    state:   the state of the new node
+;;    parent:  the parent node of the new node
+;;    action:  the action that generates current node.
+;;    cost:    the cost of the action that generates current node
+;;    heuristic-func:   the function that gets the heuristic of the new node
+;;
+;;  Returns:
+;;    A new node
+;;
 (defun expand-node-action (state parent action cost heuristic-func)
   (UNLESS (NULL action)
   (make-node  :state state
@@ -436,7 +512,21 @@
 ;;;  receives a strategy, extracts from it the comparison function,
 ;;;  and calls insert-nodes
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  insert-in-order
+;;
+;;  Given state, parent, action, cost and a heuristic functions, it makes
+;;  a new node and initilize it's fields as necessary
+;;
+;;  Input:
+;;    n:    node
+;;    lst:  sorted list
+;;    node-compare-p: function that compares two nodes
+;;
+;;  Returns:
+;;    The sorted list with n in it
+;;
 (defun insert-in-order (n lst node-compare-p)
   (IF (NULL lst)
       (cons n lst)
@@ -614,6 +704,16 @@
 (defun graph-search (problem strategy)
   (graph-search-aux problem (list (make-initial-node (problem-initial-state problem))) nil strategy))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  make-initial-node
+;;
+;;  Input:
+;;    state:   the name of a node in the graph
+;;
+;;    Returns:
+;;     A node structure with the given state as a initial node on a search
+;;
 (defun make-initial-node (state)
   (make-node
     :state state
@@ -623,9 +723,10 @@
     :h 0
     :f 0))
 
-;
-;  A* search is simply a function that solves a problem using the A* strategy
-;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  A* search is simply a function that solves a problem using the A* strategy
+;;
 (defun a-star-search (problem)
   (UNLESS (NULL problem)
     (graph-search problem *A-star*)))
@@ -642,7 +743,7 @@
 ;;;    BEGIN Exercise 10: Solution path
 ;;;
 ;*** solution-path ***
-
+; Visualize solution path
 (defun solution-path (node)
   (reverse (node-names node)))
 
@@ -652,6 +753,18 @@
 (defun action-sequence (node)
   (reverse (node-action-rec node)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; node-action-rec
+;;
+;;  Gets a list with the path of actions implicit in the node struct
+;;
+;;  Input:
+;;    node:       node structure that contains, in the chain of parent-nodes,
+;;                a path starting at the initial state
+;;  Returns
+;;    The path of action implicit in the node structure
+;;
 (defun node-action-rec (node)
   (UNLESS (NULL node)
       (IF (NULL (node-parent node))
@@ -669,24 +782,24 @@
 ;; In the DFS strategy, we will explore the nodes in a LIFO order
 ;; In the BFS strategy, we will explore the nodes in a FIFO order
 ;;
-(defun lifo (node-1 node-2)
+(defun depth-first-node-compare-p (node-1 node-2)
   (>= (node-depth node-1)
       (node-depth node-2)))
 
-(defparameter *DFS*
+(defparameter *depth-first*
   (make-strategy
     :name           'DFS
-    :node-compare-p #'lifo))
+    :node-compare-p #'depth-first-node-compare-p))
 
-(defun fifo (node-1 node-2)
+(defun breadth-first-node-compare-p (node-1 node-2)
   (<= (node-depth node-1)
       (node-depth node-2)))
 
-(defparameter *BFS*
+(defparameter *breadth-first*
   (make-strategy
     :name           'BFS
-    :node-compare-p #'fifo))
+    :node-compare-p #'breadth-first-node-compare-p))
 ;;
-;; END: Exercise 8 -- Definition of the A* strategy
+;; END: Exercise 11 -- Definition of DFS and BFS strategies
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
