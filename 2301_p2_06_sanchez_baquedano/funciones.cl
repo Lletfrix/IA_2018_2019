@@ -463,11 +463,6 @@
 ;;    those of the list "nodes@. The list is ordered with respect to the
 ;;   criterion node-compare-p.
 ;;
-;(defun insert-nodes (nodes lst-nodes node-compare-p)
-;  (IF (NULL (CDR nodes))
-;      (insert-in-order (CAR nodes) lst-nodes node-compare-p)
-;      (insert-in-order (CAR nodes) (insert-nodes (CDR nodes) lst-nodes node-compare-p) node-compare-p)))
-
 (defun insert-nodes (nodes lst-nodes node-compare-p)
   (IF (NULL nodes)
       lst-nodes
@@ -593,7 +588,7 @@
           (IF (AND (member u closed-nodes :test (problem-f-search-state-equal problem) )
                    (>= (node-g u) (node-g (CAR (member u closed-nodes :test (problem-f-search-state-equal problem))))))
               (graph-search-aux problem (CDR open-nodes) closed-nodes strategy)
-              (graph-search-aux problem (insert-nodes-strategy (expand-node u problem) open-nodes strategy) (cons u closed-nodes) strategy))))))
+              (graph-search-aux problem (insert-nodes-strategy (expand-node u problem) (CDR open-nodes) strategy) (cons u closed-nodes) strategy))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
