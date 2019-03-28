@@ -522,7 +522,7 @@
 
 (defparameter *A-star*
   (make-strategy
-    :name           'a-estrella
+    :name           'A-star
     :node-compare-p #'node-f-<=))
 
 ;;
@@ -666,3 +666,32 @@
 ;;;    END Exercise 10: Solution path / action sequence
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; BEGIN: Exercise 11 -- Definition of DFS and BFS strategies
+;; In the DFS strategy, we will explore the nodes in a LIFO order
+;; In the BFS strategy, we will explore the nodes in a FIFO order
+;;
+(defun lifo (node-1 node-2)
+  (>= (node-depth node-1)
+      (node-depth node-2)))
+
+(defparameter *DFS*
+  (make-strategy
+    :name           'DFS
+    :node-compare-p #'lifo))
+
+(defun fifo (node-1 node-2)
+  (<= (node-depth node-1)
+      (node-depth node-2)))
+
+(defparameter *BFS*
+  (make-strategy
+    :name           'BFS
+    :node-compare-p #'fifo))
+;;
+;; END: Exercise 8 -- Definition of the A* strategy
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
