@@ -267,9 +267,10 @@
   (AND (is-subset (last path) destination) (is-subset mandatory path))))
 
 (defun node-names (node)
-  (IF (NULL (node-parent node))
-      (list (node-state node))
-      (cons (node-state node) (node-names (node-parent node)))))
+  (UNLESS (NULL node)
+      (IF (NULL (node-parent node))
+          (list (node-state node))
+          (cons (node-state node) (node-names (node-parent node))))))
 
 (defun is-subset (A B)
   (NULL (set-difference A B)))
@@ -631,7 +632,8 @@
 ;  A* search is simply a function that solves a problem using the A* strategy
 ;
 (defun a-star-search (problem)
-  (graph-search problem *A-star*))
+  (UNLESS (NULL problem)
+    (graph-search problem *A-star*)))
 
 
 ;;
@@ -653,8 +655,13 @@
 ; Visualize sequence of actions
 
 (defun action-sequence (node)
-  )
+  (reverse (node-action-rec node)))
 
+(defun node-action-rec (node)
+  (UNLESS (NULL node)
+      (IF (NULL (node-parent node))
+          (node-action node)
+          (cons (node-action node) (node-action-rec (node-parent node))))))
 ;;;
 ;;;    END Exercise 10: Solution path / action sequence
 ;;;
