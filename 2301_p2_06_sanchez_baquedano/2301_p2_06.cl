@@ -3,7 +3,7 @@
 ;;    Lab assignment 2: Search
 ;;
 ;;    Solutions
-;;    Created:  Simone Santini, 2019/03/05
+;;    Rafael Sanchez Sanchez, Miguel Baquedano Peman
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
