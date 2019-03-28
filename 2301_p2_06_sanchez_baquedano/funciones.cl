@@ -267,8 +267,9 @@
   (AND (is-subset (last path) destination) (is-subset mandatory path))))
 
 (defun node-names (node)
-  (UNLESS (NULL (node-parent node))
-  (cons (node-state node) (node-names (node-parent node)))))
+  (IF (NULL (node-parent node))
+      (list (node-state node))
+      (cons (node-state node) (node-names (node-parent node)))))
 
 (defun is-subset (A B)
   (NULL (set-difference A B)))
@@ -300,9 +301,9 @@
 ;;    NIL: The nodes are not equivalent
 ;;
 (defun f-search-state-equal (node-1 node-2 &optional mandatory)
-  (NULL (AND (EQUAL (node-state node-1)(node-state node-2))
-             (set-equal (intersection (node-names node-1) mandatory)
-                        (intersection (node-names node-2) mandatory)))))
+  (AND (EQUAL (node-state node-1)(node-state node-2))
+        (set-equal  (intersection (node-names node-1) mandatory)
+                    (intersection (node-names node-2) mandatory))))
 
 (defun set-equal (A B)
   (AND (is-subset A B) (is-subset B A)))
@@ -389,14 +390,22 @@
 ;;    given one
 ;;
 (defun expand-node (node problem)
-  (mapcar #'(lambda(x) (expand-node-action node (action-final x) x)) (expand-states node problem)))
+  (mapcar #'(lambda(x)
+            (expand-node-action (action-final x) node x (action-cost x) (problem-f-h problem)))
+            (expand-states node problem)))
 
 (defun expand-states (node problem)
   (mapcan #'(lambda(op) (funcall op node)) (problem-operators problem)))
 
-(defun expand-node-action (node state action)
+(defun expand-node-action (state parent action cost heuristic-func)
   (UNLESS (NULL action)
-  (make-node :state state :action action :parent node)))
+  (make-node  :state state
+              :parent parent
+              :action action
+              :depth (+ 1 (node-depth parent))
+              :g (+ cost (node-g parent))
+              :h (funcall heuristic-func state)
+              :f (+ (+ cost (node-g parent)) (funcall heuristic-func state)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;  BEGIN Exercise 7 -- Node list management
@@ -427,12 +436,12 @@
 ;;;  and calls insert-nodes
 
 
-  (defun insert-in-order (n lst node-compare-p)
-    (IF (NULL lst)
-        (cons n lst)
-        (IF (funcall node-compare-p n (CAR lst))
-            (cons n lst)
-            (cons (CAR lst) (insert-in-order n (CDR lst) node-compare-p)))))
+(defun insert-in-order (n lst node-compare-p)
+  (IF (NULL lst)
+      (cons n lst)
+      (IF (funcall node-compare-p n (CAR lst))
+          (cons n lst)
+          (cons (CAR lst) (insert-in-order n (CDR lst) node-compare-p)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -453,9 +462,14 @@
 ;;    those of the list "nodes@. The list is ordered with respect to the
 ;;   criterion node-compare-p.
 ;;
+;(defun insert-nodes (nodes lst-nodes node-compare-p)
+;  (IF (NULL (CDR nodes))
+;      (insert-in-order (CAR nodes) lst-nodes node-compare-p)
+;      (insert-in-order (CAR nodes) (insert-nodes (CDR nodes) lst-nodes node-compare-p) node-compare-p)))
+
 (defun insert-nodes (nodes lst-nodes node-compare-p)
-  (IF (NULL (CDR nodes))
-      (insert-in-order (CAR nodes) lst-nodes node-compare-p)
+  (IF (NULL nodes)
+      lst-nodes
       (insert-in-order (CAR nodes) (insert-nodes (CDR nodes) lst-nodes node-compare-p) node-compare-p)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -483,7 +497,7 @@
 ;;   use it to call insert-nodes.
 ;;
 (defun insert-nodes-strategy (nodes lst-nodes strategy)
-  )
+  (insert-nodes nodes lst-nodes (strategy-node-compare-p strategy)))
 
 ;;
 ;;    END: Exercize 7 -- Node list management
@@ -500,8 +514,15 @@
 ;; us which nodes should be analyzed first. In the A* strategy, the first
 ;; node to be analyzed is the one with the smallest value of g+h
 ;;
+(defun node-f-<= (node-1 node-2)
+  (<= (node-f node-1)
+      (node-f node-2)))
+
+
 (defparameter *A-star*
-  (make-strategy ))
+  (make-strategy
+    :name           'a-estrella
+    :node-compare-p #'node-f-<=))
 
 ;;
 ;; END: Exercise 8 -- Definition of the A* strategy
@@ -564,7 +585,14 @@
 ;;     whole path from the starting node to the final.
 ;;
 (defun graph-search-aux (problem open-nodes closed-nodes strategy)
-  )
+  (let ((u (CAR open-nodes)))
+  (UNLESS (NULL open-nodes)
+      (IF (funcall (problem-f-goal-test problem) u)
+          u ;Evaluar solucion y terminar
+          (IF (AND (member u closed-nodes :test (problem-f-search-state-equal problem) )
+                   (>= (node-g u) (node-g (CAR (member u closed-nodes :test (problem-f-search-state-equal problem))))))
+              (graph-search-aux problem (CDR open-nodes) closed-nodes strategy)
+              (graph-search-aux problem (insert-nodes-strategy (expand-node u problem) open-nodes strategy) (cons u closed-nodes) strategy))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -588,13 +616,22 @@
 ;;    and an empty closed list.
 ;;
 (defun graph-search (problem strategy)
-  )
+  (graph-search-aux problem (list (make-initial-node (problem-initial-state problem))) nil strategy))
+
+(defun make-initial-node (state)
+  (make-node
+    :state state
+    :parent NIL
+    :action NIL
+    :g 0
+    :h 0
+    :f 0))
 
 ;
 ;  A* search is simply a function that solves a problem using the A* strategy
 ;
 (defun a-star-search (problem)
-  )
+  (graph-search problem *A-star*))
 
 
 ;;
@@ -610,7 +647,7 @@
 ;*** solution-path ***
 
 (defun solution-path (node)
-  )
+  (reverse (node-names node)))
 
 ;*** action-sequence ***
 ; Visualize sequence of actions
