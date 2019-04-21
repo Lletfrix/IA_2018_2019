@@ -23,11 +23,82 @@ divide([X|L], N, L1, [X|L2]) :- N=<0, divide(L, N-1, L1, L2).
 %%%%%%%%%%%%%%%
 % Ejercicio 5 %
 %%%%%%%%%%%%%%%
-%TODO: Entender por que funciona
+concatena([], L, L).
+concatena([X|L1], L2, [X|L3]) :- concatena(L1, L2, L3).
+
 aplasta([], []) :- !.
 aplasta([X|L], L1) :- !, aplasta(X, F), aplasta(L, F1), concatena(F,F1, L1).
 aplasta(L, [L]).
 %%%%%%%%%%%%%%%
 % Ejercicio 6 %
 %%%%%%%%%%%%%%%
-next_factor(N, F, NF) :- (F=2, NF=3) ; (F<sqrt(N), NF=F+2).
+
+%%%%%%%%%%%%%%%
+% Ejercicio 7 %
+%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%
+% Ejercicio 7.1 %
+%%%%%%%%%%%%%%%%%
+cod_primero(X, [], [], [X]).
+cod_primero(X, [X|L], LRem, [X|LFront]) :- cod_primero(X, L, LRem, LFront), !.
+cod_primero(X1, [X2|L], [X2|LRem], LFront) :- cod_primero(X, L, LRem, LFront), !.
+
+%%%%%%%%%%%%%%%%%
+% Ejercicio 7.2 %
+%%%%%%%%%%%%%%%%%
+cod_all([], []).
+cod_all([X1|L1], [X2|L2]) :- cod_primero(X1, L1, LRest, X2), cod_all(LRest, L2).
+
+%%%%%%%%%%%%%%%%%
+% Ejercicio 7.3 %
+%%%%%%%%%%%%%%%%%
+list_to_rl([X|L], [Len,X]) :- length([X|L], Len).
+
+transform_rl([], []).
+transform_rl([X1|L1], [X2|L2]) :- list_to_rl(X1, X2), transform_rl(L1, L2).
+
+run_length(L, L1) :- cod_all(L, L2),
+                     transform_rl(L2, L1).
+%%%%%%%%%%%%%%%
+% Ejercicio 8 %
+%%%%%%%%%%%%%%%
+get_symbol(Comp, X) :- compound_name_arguments(Comp, _, [X|_]).
+build_tree([], nil) :- !.
+build_tree([X], tree(Sym, nil, nil)) :- get_symbol(X, Sym).
+build_tree([X|L], tree(1, T1, T2)) :- build_tree([X], T1), build_tree(L, T2), !.
+%%%%%%%%%%%%%%%%%
+% Ejercicio 8.1 %
+%%%%%%%%%%%%%%%%%
+info(tree(I, _, _), I).
+left(tree(_, L, _), L).
+right(tree(_, _, R), R).
+
+encode_elem(E, [0], Tree) :- left(Tree, Elem), info(Elem, E).
+encode_elem(E, [1], Tree) :- right(Tree, Elem), info(Elem, E), !.
+encode_elem(E, [1|L], Tree) :- right(Tree, Elem), encode_elem(E, L, Elem), !.
+%%%%%%%%%%%%%%%%%
+% Ejercicio 8.2 %
+%%%%%%%%%%%%%%%%%
+encode_list([], [], _).
+encode_list([X1|L1], [X2|L2], Tree) :- encode_elem(X1, X2, Tree), encode_list(L1, L2, Tree), !.
+%%%%%%%%%%%%%%%%%
+% Ejercicio 8.3 %
+%%%%%%%%%%%%%%%%%
+% Generamos una lista con las apariciones de cada letra
+runlen_text(L, L1) :- msort(L, SL), run_length(SL, L1).
+
+% Transformamos una lista listas con dos valores en una lista de clave-valor
+list_to_comps([], []).
+list_to_comps([X|L], [XC| LC]) :- compound_name_arguments(XC, -, X), list_to_comps(L, LC).
+
+% Invertimos el orden de los compounds
+invierte_comp(C, C1) :- compound_name_arguments(C, _, L), invierte(L, L1), compound_name_arguments(C1, -, L1).
+
+invierte_comp_list([], []).
+invierte_comp_list([X1|L1], [X2|L2]) :- invierte_comp(X1, X2), invierte_comp_list(L1, L2).
+
+% Construimos una lista preparada para llamar a build_tree
+build_list(L1, L2) :- runlen_text(L1, RL), list_to_comps(RL, LC), keysort(LC, SL), invierte_comp_list(SL, IL), invierte(IL, L2).
+
+encode(L1, L2) :- build_list(L1, L), build_tree(L, Tree), encode_list(L1, L2, Tree).
