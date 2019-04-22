@@ -52,7 +52,7 @@ primos(N, L, X) :- next_factor(N, X, NF), primos(N, L, NF).
 %%%%%%%%%%%%%%%%%
 cod_primero(X, [], [], [X]).
 cod_primero(X, [X|L], LRem, [X|LFront]) :- cod_primero(X, L, LRem, LFront), !.
-cod_primero(X1, [X2|L], [X2|LRem], LFront) :- cod_primero(X, L, LRem, LFront), !.
+cod_primero(X1, [X2|L], [X2|LRem], LFront) :- cod_primero(X1, L, LRem, LFront), !.
 
 %%%%%%%%%%%%%%%%%
 % Ejercicio 7.2 %
@@ -108,7 +108,7 @@ list_to_comps([], []).
 list_to_comps([X|L], [XC| LC]) :- compound_name_arguments(XC, -, X), list_to_comps(L, LC).
 
 % Invertimos el orden de los compounds
-invierte_comp(C, C1) :- compound_name_arguments(C, _, L), invierte(L, L1), compound_name_arguments(C1, -, L1).
+invierte_comp(C, C1) :- compound_name_arguments(C, Functor, L), invierte(L, L1), compound_name_arguments(C1, Functor, L1).
 
 invierte_comp_list([], []).
 invierte_comp_list([X1|L1], [X2|L2]) :- invierte_comp(X1, X2), invierte_comp_list(L1, L2).
