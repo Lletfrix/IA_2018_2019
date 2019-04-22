@@ -32,7 +32,17 @@ aplasta(L, [L]).
 %%%%%%%%%%%%%%%
 % Ejercicio 6 %
 %%%%%%%%%%%%%%%
+next_factor(_,2,3) :- !.
+next_factor(N, F, NF) :- NF is F+2, F<N.
 
+es_divisible(X, Y) :- X mod Y =:= 0.
+
+prime(X) :- crypto_is_prime(X, []).
+
+primos(N, L) :- N > 0, primos(N, L, 2).
+primos(1, [], _):- !.
+primos(N, [X|L], X) :- es_divisible(N, X), prime(X),  C is N/X, primos(C, L, X), !.
+primos(N, L, X) :- next_factor(N, X, NF), primos(N, L, NF).
 %%%%%%%%%%%%%%%
 % Ejercicio 7 %
 %%%%%%%%%%%%%%%
@@ -85,6 +95,11 @@ encode_list([X1|L1], [X2|L2], Tree) :- encode_elem(X1, X2, Tree), encode_list(L1
 %%%%%%%%%%%%%%%%%
 % Ejercicio 8.3 %
 %%%%%%%%%%%%%%%%%
+% Comprobamos que la cadena sea válida
+dictionary([a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]).
+string_valid([]).
+string_valid([X|L]) :- dictionary(Dict), member(X, Dict),  string_valid(L), !.
+
 % Generamos una lista con las apariciones de cada letra
 runlen_text(L, L1) :- msort(L, SL), run_length(SL, L1).
 
@@ -99,6 +114,6 @@ invierte_comp_list([], []).
 invierte_comp_list([X1|L1], [X2|L2]) :- invierte_comp(X1, X2), invierte_comp_list(L1, L2).
 
 % Construimos una lista preparada para llamar a build_tree
-build_list(L1, L2) :- runlen_text(L1, RL), list_to_comps(RL, LC), keysort(LC, SL), invierte_comp_list(SL, IL), invierte(IL, L2).
+build_list(L1, L2) :- string_valid(L1), runlen_text(L1, RL), list_to_comps(RL, LC), keysort(LC, SL), invierte_comp_list(SL, IL), invierte(IL, L2).
 
 encode(L1, L2) :- build_list(L1, L), build_tree(L, Tree), encode_list(L1, L2, Tree).
