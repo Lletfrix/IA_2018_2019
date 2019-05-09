@@ -12,8 +12,7 @@ invierte([X|L], Q, R, [_|SZR]) :- invierte(L, [X|Q], R, SZR). %SZR es el tamaño
 %%%%%%%%%%%%%%%
 % Ejercicio 3 %
 %%%%%%%%%%%%%%%
-igual(X, X).
-palindromo(L1) :- igual(L1, L2), invierte(L1, L2).
+palindromo(L1) :- invierte(L1, L1).
 %%%%%%%%%%%%%%%
 % Ejercicio 4 %
 %%%%%%%%%%%%%%%
@@ -91,7 +90,8 @@ encode_elem(E, [1|L], Tree) :- right(Tree, Elem), encode_elem(E, L, Elem), !.
 % Ejercicio 8.2 %
 %%%%%%%%%%%%%%%%%
 encode_list([], [], _).
-encode_list([X1|L1], [X2|L2], Tree) :- encode_elem(X1, X2, Tree), encode_list(L1, L2, Tree), !.
+encode_list([X1|L1], [X2|L2], Tree) :- encode_elem(X1, X2, Tree),
+                                       encode_list(L1, L2, Tree), !.
 %%%%%%%%%%%%%%%%%
 % Ejercicio 8.3 %
 %%%%%%%%%%%%%%%%%
@@ -105,15 +105,26 @@ runlen_text(L, L1) :- msort(L, SL), run_length(SL, L1).
 
 % Transformamos una lista listas con dos valores en una lista de clave-valor
 list_to_comps([], []).
-list_to_comps([X|L], [XC| LC]) :- compound_name_arguments(XC, -, X), list_to_comps(L, LC).
+list_to_comps([X|L], [XC| LC]) :- compound_name_arguments(XC, -, X),
+                                  list_to_comps(L, LC).
 
 % Invertimos el orden de los compounds
-invierte_comp(C, C1) :- compound_name_arguments(C, Functor, L), invierte(L, L1), compound_name_arguments(C1, Functor, L1).
+invierte_comp(C, C1) :- compound_name_arguments(C, Functor, L),
+                        invierte(L, L1),
+                        compound_name_arguments(C1, Functor, L1).
 
 invierte_comp_list([], []).
-invierte_comp_list([X1|L1], [X2|L2]) :- invierte_comp(X1, X2), invierte_comp_list(L1, L2).
+invierte_comp_list([X1|L1], [X2|L2]) :- invierte_comp(X1, X2),
+                                        invierte_comp_list(L1, L2).
 
 % Construimos una lista preparada para llamar a build_tree
-build_list(L1, L2) :- string_valid(L1), runlen_text(L1, RL), list_to_comps(RL, LC), keysort(LC, SL), invierte_comp_list(SL, IL), invierte(IL, L2).
+build_list(L1, L2) :- string_valid(L1),
+                      runlen_text(L1, RL),
+                      list_to_comps(RL, LC),
+                      keysort(LC, SL),
+                      invierte_comp_list(SL, IL),
+                      invierte(IL, L2).
 
-encode(L1, L2) :- build_list(L1, L), build_tree(L, Tree), encode_list(L1, L2, Tree).
+encode(L1, L2) :- build_list(L1, L),
+                  build_tree(L, Tree),
+                  encode_list(L1, L2, Tree).
