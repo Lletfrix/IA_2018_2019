@@ -90,13 +90,35 @@
 ;;;  Funciones auxiliares de heurística base
 ;;; -------------------------------------------------------------------
 
-;; Funcion de evaluación de una línea
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; comprueba
+;;
+;; Devuelve t si alguna ficha es nil o son iguales
+;; Devuelve nil en caso contrario
 (defun comprueba (ficha1 ficha2)
   (if (or (not ficha1) (not ficha2))
       t
     (= ficha1 ficha2)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; eval-line
+;;
+;; Evalua una linea dado un tablero, la ficha del jugador, coordenadas de inicio,
+;; longitud de la linea y funcion de direccion
+;;
+;; Input:
+;;    tablero: estructura del tablero
+;;    ficha: ficha del jugador
+;;    columna: columna a partir de la cual mirar
+;;    fila: fila a partir de la cual mirar
+;;    longitud: longitud de la linea a evaluar
+;;    ficha-valida: ficha actual valida de la linea a evaluar
+;;    f-coordenadas: funcion que devuelve las coordenadas de la ficha siguiente
+;;                   en la linea a evaluar
+;;
+;; Output: Tupla (valor, valido).
+;;    valor: valor de la linea {0,1,2,3}
+;;    valido: t o NIL, indica si es valido o no. Solo para backtracking.
 (defun eval-line (tablero ficha columna fila longitud ficha-valida f-coordenadas)
   (let ((ficha-actual (obtener-ficha tablero columna fila)))
   (cond ((< longitud 1)
@@ -124,8 +146,12 @@
     (t
         (values 0 nil)))))
 
-;; Funciones de dirección
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Funciones de direccion
+;;
+;; Devuelve las coordenadas siguientes del espacio
+;; ZxZ en la direccion determinada por el nombre de la
+;; funcion
 (defun arriba (x y) (values x (1+ y)))
 (defun derecha (x y) (values (1+ x) y))
 (defun arriba-derecha (x y) (values (1+ x) (1+ y)))
@@ -133,8 +159,11 @@
 (defun abajo-izquierda (x y) (values (1- x) (1- y)))
 (defun abajo-derecha (x y) (values (1+ x) (1- y)))
 
-;; Funciones de evaluación con dirección fija
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Funciones de evaluacion de una linea
+;;
+;; Envuelve eval-line con parametros fijos para legibilidad
+;; del codigo y facilitar su llamada desde fuera.
 (defun eval-horizontal (tablero ficha columna fila)
   (eval-line tablero ficha columna fila 3 nil #'derecha))
 
@@ -147,18 +176,41 @@
 (defun eval-diag-izda (tablero ficha columna fila)
   (eval-line tablero ficha columna fila 3 nil #'arriba-izquierda))
 
-;; Funciones para hallar los índices de arrays a evaluar según dirección
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; range
+;;
+;; Equivalente a range de python. Devuelve una lista con
+;; enteros en el rango [min, max)
 (defun range (min max)
    (loop for n from min below max
       collect n))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; cartesian-product
+;;
+;; Devuelve la lista resultante del producto cartesiano
+;; de l1 con l2
 (defun cartesian-product (l1 l2)
   (loop
     for x in l1
     nconc (loop for y in l2
                 collect (list x y))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Funciones de indices
+;;
+;; Devuelven las listas de coordenadas a partir de las cuales
+;; hay una linea de longitud 4 en un tablero de tamaño ancho x alto
+;; en distintas direcciones.
+;;
+;; indices-horizontales: coordenadas a partir de las cuales hay una
+;;                       linea de longitud 4 hacia la derecha
+;;
+;; indices-verticales: coordenadas a partir de las cuales hay una
+;;                     linea de longitud 4 hacia arriba
+;;
+;; indices-diagonales: coordenadas a partir de las cuales hay una
+;;                     linea de longitud 4.
 (defun indices-horizontales (ancho alto)
   (cartesian-product (range 0 (- ancho 3)) (range 0 alto)))
 (defun indices-verticales (ancho alto)
